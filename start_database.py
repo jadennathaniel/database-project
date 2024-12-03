@@ -8,7 +8,6 @@ DB_CONFIG = {
     'host': 'localhost',
 }
 
-# Function to initialize the database and tables
 def initialize_database():
     try:
         # Connect to MySQL server
@@ -98,7 +97,6 @@ def initialize_database():
             );
         """)
 
-        # Commit changes
         connection.commit()
         print("Database and tables created successfully.")
 

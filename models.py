@@ -1,10 +1,14 @@
 from app import get_db_connection
+from mysql.connector import Error  
 
 def create_tables():
+    conn = None
+    cursor = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-                # Create database
+
+        # Create database if it doesn't exist
         cursor.execute("CREATE DATABASE IF NOT EXISTS ProgramEvaluation;")
         cursor.execute("USE ProgramEvaluation;")
 
@@ -93,11 +97,8 @@ def create_tables():
     except Error as e:
         print(f"Error: {e}")
     finally:
-        # Close the connection
-        if conn.is_connected():
+        if cursor:
             cursor.close()
+        if conn and conn.is_connected():
             conn.close()
             print("Database connection closed.")
-    
-    cursor.close()
-    conn.close()

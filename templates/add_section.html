@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Section</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        select, input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Add Section</h1>
+    
+    <form method="post" onsubmit="return validateForm()">
+        <div class="form-group">
+            <label for="semester">Semester:</label>
+            <select name="semester" id="semester" required>
+                <option value="">Select Semester</option>
+                <option value="Spring">Spring</option>
+                <option value="Summer">Summer</option>
+                <option value="Fall">Fall</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="course_id">Course:</label>
+            <select name="course_id" id="course_id" required>
+                <option value="">Select Course</option>
+                {% for course in courses %}
+                <option value="{{ course.course_id }}">{{ course.course_number }} - {{ course.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="section_number">Section Number:</label>
+            <input type="text" 
+                   id="section_number" 
+                   name="section_number"
+                   pattern="[0-9]{3}"
+                   title="Please enter exactly 3 digits"
+                   required>
+        </div>
+
+        <div class="form-group">
+            <label for="instructor_id">Instructor:</label>
+            <select name="instructor_id" id="instructor_id" required>
+                <option value="">Select Instructor</option>
+                {% for instructor in instructors %}
+                <option value="{{ instructor.instructor_id }}">{{ instructor.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="students_enrolled">Number of Students:</label>
+            <input type="number" 
+                   id="students_enrolled" 
+                   name="students_enrolled"
+                   min="0"
+                   required>
+        </div>
+
+        <input type="submit" value="Add Section">
+    </form>
+
+    <script>
+        function validateForm() {
+            const section = document.getElementById('section_number').value;
+            if (!/^\d{3}$/.test(section)) {
+                alert('Section number must be exactly 3 digits');
+                return false;
+            }
+            return true;
+        }
+    </script>
+</body>
+</html>

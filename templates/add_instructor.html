@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Instructor</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .error {
+            color: red;
+            font-size: 0.9em;
+            display: none;
+        }
+        .nav {
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <a href="{{ url_for('index') }}">Back to Home</a>
+    </div>
+    
+    <h1>Add Instructor</h1>
+    
+    <form method="post" onsubmit="return validateForm()">
+        <div class="form-group">
+            <label for="id">Instructor ID:</label>
+            <input type="text" 
+                   id="id" 
+                   name="id" 
+                   pattern="[0-9]{8}"
+                   title="Please enter exactly 8 digits"
+                   required>
+            <div id="idError" class="error">ID must be exactly 8 digits</div>
+        </div>
+
+        <div class="form-group">
+            <label for="name">Instructor Name:</label>
+            <input type="text" 
+                   id="name" 
+                   name="name" 
+                   required>
+        </div>
+
+        <input type="submit" value="Add Instructor">
+    </form>
+
+    <script>
+        function validateForm() {
+            const id = document.getElementById('id').value;
+            const idError = document.getElementById('idError');
+            
+            if (!/^\d{8}$/.test(id)) {
+                idError.style.display = 'block';
+                return false;
+            }
+            
+            idError.style.display = 'none';
+            return true;
+        }
+    </script>
+</body>
+</html>

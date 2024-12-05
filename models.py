@@ -102,3 +102,105 @@ def create_tables():
         if conn and conn.is_connected():
             conn.close()
             print("Database connection closed.")
+
+def add_degree(name, level):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('INSERT INTO Degrees (name, level) VALUES (%s, %s)', (name, level))
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+def get_degrees():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute('SELECT * FROM Degrees')
+    degrees = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return degrees
+
+def add_instructor(instructor_id, name):
+    if not (isinstance(instructor_id, str) and len(instructor_id) == 8):
+        raise ValueError("instructor_id must be an 8-digit string") 
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute('INSERT INTO Instructors (instructor_id, name) VALUES (%s, %s)', 
+                      (instructor_id, name))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        cursor.close()
+        conn.close()
+
+def get_all_courses():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute('SELECT * FROM Courses')
+    courses = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return courses
+
+def get_all_instructors():
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute('SELECT * FROM Instructors')
+    instructors = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return instructors
+
+def add_section(course_id, section_number, semester, instructor_id, students_enrolled):
+    if not section_number.isdigit() or len(section_number) != 3:
+        raise ValueError("Section number must be 3 digits")
+        
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''
+            INSERT INTO Sections 
+            (course_id, section_number, semester, instructor_id, students_enrolled)
+            VALUES (%s, %s, %s, %s, %s)
+        ''', (course_id, section_number, semester, instructor_id, students_enrolled))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        cursor.close()
+        conn.close()
+
+def add_goal():
+    pass
+
+def associate_course_goal():
+    pass
+
+def add_course(course_number, name, degree_ids):
+    if not isinstance(degree_ids, list):
+        raise ValueError("degree_ids must be a list")
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute('INSERT INTO Courses (course_number, name) VALUES (%s, %s)', (course_number, name))
+        course_id = cursor.lastrowid
+        print(course_id)
+        
+        for degree_id in degree_ids:
+            cursor.execute('SELECT degree_id FROM Degrees WHERE degree_id = %s', (degree_id,))
+            if cursor.fetchone() is None:
+                raise ValueError(f"Degree ID {degree_id} does not exist")
+            cursor.execute('INSERT INTO DegreeCourses (course_id, degree_id) VALUES (%s, %s)', (course_id, degree_id))
+        
+        conn.commit()
+    except Error as e:
+        print(f"Error: {e}")
+        conn.rollback()
+    finally:
+        cursor.close()
+        conn.close()

@@ -174,11 +174,40 @@ def add_section(course_id, section_number, semester, instructor_id, students_enr
         cursor.close()
         conn.close()
 
-def add_goal():
-    pass
+def add_goal(degree_id, code, description):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute('INSERT INTO Goals (degree_id, code, description) VALUES (%s, %s, %s)', 
+                       (degree_id, code, description))
+        conn.commit()
+    except Error as e:
+        print(f"Error: {e}")
+        conn.rollback()
+    finally:
+        cursor.close()
+        conn.close()
 
-def associate_course_goal():
-    pass
+def associate_course_goal(course_id, goal_id):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute('SELECT course_id FROM Courses WHERE course_id = %s', (course_id,))
+        if cursor.fetchone() is None:
+            raise ValueError(f"Course ID {course_id} does not exist")
+        
+        cursor.execute('SELECT goal_id FROM Goals WHERE goal_id = %s', (goal_id,))
+        if cursor.fetchone() is None:
+            raise ValueError(f"Goal ID {goal_id} does not exist")
+
+        print(f"Associated Course ID {course_id} with Goal ID {goal_id}")
+        conn.commit()
+    except Error as e:
+        print(f"Error: {e}")
+        conn.rollback()
+    finally:
+        cursor.close()
+        conn.close()
 
 def add_course(course_number, name, degree_ids):
     if not isinstance(degree_ids, list):
@@ -204,3 +233,53 @@ def add_course(course_number, name, degree_ids):
     finally:
         cursor.close()
         conn.close()
+
+def add_evaluation(section_id, goal_id, evaluation_method, grade_counts, improvement_notes=None):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute('''
+            INSERT INTO Evaluations 
+            (section_id, goal_id, evaluation_method, grade_A, grade_B, grade_C, grade_F, improvement_notes)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+        ''', (section_id, goal_id, evaluation_method, 
+              grade_counts.get('A', 0), grade_counts.get('B', 0), 
+              grade_counts.get('C', 0), grade_counts.get('F', 0), 
+              improvement_notes))
+        conn.commit()
+    except Error as e:
+        print(f"Error: {e}")
+        conn.rollback()
+    finally:
+        cursor.close()
+        conn.close()
+
+def get_sections_by_semester(semester):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute('SELECT * FROM Sections WHERE semester = %s', (semester,))
+        sections = cursor.fetchall()
+        return sections
+    finally:
+        cursor.close()
+        conn.close()
+
+def get_evaluation_status(semester):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute('''
+            SELECT s.section_id, s.course_id, s.section_number, s.semester,
+                   COUNT(e.evaluation_id) AS evaluation_count
+            FROM Sections s
+            LEFT JOIN Evaluations e ON s.section_id = e.section_id
+            WHERE s.semester = %s
+            GROUP BY s.section_id
+        ''', (semester,))
+        status = cursor.fetchall()
+        return status
+    finally:
+        cursor.close()
+        conn.close()
+

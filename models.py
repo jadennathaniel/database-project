@@ -1,5 +1,5 @@
-from app import get_db_connection
-from mysql.connector import Error  
+from db import get_db_connection
+from mysql.connector import Error
 
 def create_tables():
     conn = None
@@ -11,6 +11,8 @@ def create_tables():
         # Create database if it doesn't exist
         cursor.execute("CREATE DATABASE IF NOT EXISTS ProgramEvaluation;")
         cursor.execute("USE ProgramEvaluation;")
+        print("Using database: ProgramEvaluation")
+
 
         # Create Degrees table
         cursor.execute("""

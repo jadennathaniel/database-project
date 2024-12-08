@@ -61,3 +61,301 @@ footer p {
         padding: 20px;
     }
 }
+
+/* Style the top-level h1 on the Add Degree page */
+body > h1 {
+    text-align: center;
+    margin-top: 40px;
+    color: #4F83CC;
+    font-size: 2em;
+}
+
+/* Style the form container */
+form {
+    max-width: 500px;
+    margin: 40px auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* Style the form labels */
+form label {
+    display: block;
+    font-weight: bold;
+    margin-top: 15px;
+    margin-bottom: 5px;
+}
+
+/* Style the text inputs */
+form input[type="text"] {
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+/* Style the submit button */
+form input[type="submit"] {
+    background: #4F83CC;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 20px;
+    font-weight: bold;
+}
+
+/* Change button color on hover for better interactivity */
+form input[type="submit"]:hover {
+    background: #3a68a3;
+}
+
+/* Dropdown (select) styling */
+select {
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    background: #fff;
+    font-size: 1em;
+    box-sizing: border-box;
+    margin-top: 10px;
+}
+
+select:focus {
+    outline: none;
+    border-color: #4F83CC;
+}
+
+/* Search bar styling */
+input[type="search"] {
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-size: 1em;
+    box-sizing: border-box;
+    margin-top: 10px;
+}
+
+input[type="search"]:focus {
+    outline: none;
+    border-color: #4F83CC;
+}
+
+/* Number input styling */
+input[type="number"] {
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-size: 1em;
+    box-sizing: border-box;
+    margin-top: 10px;
+}
+
+input[type="number"]:focus {
+    outline: none;
+    border-color: #4F83CC;
+}
+
+/* Paragraph text input (textarea) styling */
+textarea {
+    width: 100%;
+    height: 120px; /* Adjust as needed */
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-size: 1em;
+    box-sizing: border-box;
+    margin-top: 10px;
+    resize: vertical; /* Allows user to resize vertically if desired */
+}
+
+textarea:focus {
+    outline: none;
+    border-color: #4F83CC;
+}
+
+/* Radio Buttons & Checkboxes */
+input[type="radio"], input[type="checkbox"] {
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+/* Fieldsets & Legends */
+fieldset {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 20px;
+    margin-top: 20px;
+    background: #fff;
+}
+
+legend {
+    padding: 0 10px;
+    font-weight: bold;
+    color: #4F83CC;
+}
+
+/* Buttons (general) */
+.button, button {
+    background: #4F83CC;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 10px;
+    display: inline-block;
+}
+
+.button:hover, button:hover {
+    background: #3a68a3;
+}
+
+/* Links inside the main content area */
+main a {
+    color: #4F83CC;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+main a:hover {
+    text-decoration: underline;
+}
+
+/* Highlighting required fields */
+input[required], select[required], textarea[required] {
+    border-left: 4px solid #4F83CC;
+    padding-left: 8px;
+}
+
+/* Error Message Styling */
+.error {
+    color: #c00;
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+/* Success Message Styling */
+.success {
+    color: #0a0;
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+/* General Link Styling */
+a {
+    color: #4F83CC;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Visited Links */
+a:visited {
+    color: #3a68a3;
+}
+
+/* Focus and Active States for Accessibility */
+a:focus, a:active {
+    outline: none;
+    text-decoration: underline;
+    color: #2b5998;
+}
+
+/* Styles for the "Search the Database" Section */
+/* Add this to the end of your existing styles.css */
+
+/* Section container */
+section {
+    background: #fff;
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* Section heading */
+section h1 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    text-align: center;
+    color: #4F83CC;
+    font-size: 1.8em;
+    font-weight: normal;
+}
+
+/* Form styling inside the section */
+section form {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+/* Labels for form fields */
+section form label {
+    font-weight: bold;
+    margin-top: 20px;
+    margin-bottom: 5px;
+}
+
+/* Select dropdown */
+section form select {
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    background: #fff;
+    font-size: 1em;
+    box-sizing: border-box;
+}
+
+/* Text input field */
+section form input[type="text"] {
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-size: 1em;
+    box-sizing: border-box;
+}
+
+/* Submit button */
+section form button[type="submit"] {
+    background: #4F83CC;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 20px;
+    align-self: flex-start;
+}
+
+/* Hover state for the submit button */
+section form button[type="submit"]:hover {
+    background: #3a68a3;
+}
+
+/* Spacing between form elements */
+section form label + select,
+section form label + input[type="text"] {
+    margin-bottom: 10px;
+}
+
+/* Handle line breaks in the code */
+section form br {
+    line-height: 0;
+}

@@ -39,6 +39,25 @@
         <a href="{{ url_for('add_goal_route') }}">Add Goal</a><br>
         <a href="{{ url_for('add_evaluation_route') }}">Add Evaluation</a><br>
     </main>
+    <section>
+        <h1>Search the Database</h1>
+        <form action="{{ url_for('search_route') }}" method="GET">
+            <label for="filter-type">Filter By:</label>
+            <select name="filter_type" id="filter-type">
+                <option value="degree">Degree</option>
+                <option value="course">Course</option>
+                <option value="instructor">Instructor</option>
+                <option value="section">Section</option>
+                <option value="goal">Goal</option>
+                <option value="evaluation">Evaluation</option>
+            </select>
+            <br><br>
+            <label for="search-query">Search Query:</label>
+            <input type="text" id="search-query" name="search_query" placeholder="Enter your search query" />
+            <br><br>
+            <button type="submit">Search</button>
+        </form>
+    </section>
     <footer>
         <p>&copy; 2024 CS5330 Group 6 (Devon Coates, Jaden Nathaniel, Myles Miller, Chris Hirshcbrich)</p>
     </footer>

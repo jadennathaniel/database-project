@@ -212,3 +212,10 @@ def add_evaluation_route():
         except Exception as e:
             flash('Error adding evaluation', 'error')
             return redirect(request.url)
+        
+@app.route('/search_route', methods=['GET', 'POST'])
+def search_route():
+    if request.method == 'GET':
+        print("SEARCH GOT")
+    elif request.method == 'POST':
+        print("SEARCH POST")

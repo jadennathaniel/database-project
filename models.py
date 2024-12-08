@@ -262,3 +262,77 @@ def associate_course_goal(course_id, goal_id):
     finally:
         cursor.close()
         conn.close()
+
+
+# Search functions
+def get_degree(name):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    query = "SELECT * FROM Degrees WHERE name LIKE %s"
+    cursor.execute(query, ('%' + name + '%',))
+    my_degrees = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return my_degrees
+
+def get_courses_by_number(course_number, from_semester=None, to_semester=None):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    query = "SELECT * FROM Courses WHERE course_number LIKE %s"
+    params = ['%' + course_number + '%']
+    if from_semester and to_semester:
+        query += " AND semester BETWEEN %s AND %s"
+        params.extend([from_semester, to_semester])
+    cursor.execute(query, params)
+    courses = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return courses
+
+def get_instructors_by_id(instructor_id, from_semester=None, to_semester=None):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    query = "SELECT * FROM Instructors WHERE instructor_id LIKE %s"
+    params = ['%' + instructor_id + '%']
+    if from_semester and to_semester:
+        query += " AND semester BETWEEN %s AND %s"
+        params.extend([from_semester, to_semester])
+    cursor.execute(query, params)
+    instructors = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return instructors
+
+def get_sections_by_number(section_number, from_semester=None, to_semester=None):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    query = "SELECT * FROM Sections WHERE section_number LIKE %s"
+    params = ['%' + section_number + '%']
+    if from_semester and to_semester:
+        query += " AND semester BETWEEN %s AND %s"
+        params.extend([from_semester, to_semester])
+    cursor.execute(query, params)
+    sections = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return sections
+
+def get_goals_by_code(code):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    query = "SELECT * FROM Goals WHERE code LIKE %s"
+    cursor.execute(query, ('%' + code + '%',))
+    goals = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return goals
+
+def get_evaluations_by_method(method):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    query = "SELECT * FROM Evaluations WHERE method LIKE %s"
+    cursor.execute(query, ('%' + method + '%',))
+    evaluations = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return evaluations

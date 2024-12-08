@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+</head>
+<body>
+    <header>
+        <h1>Search Results</h1>
+    </header>
+    <main>
+        {% if results %}
+            <ul>
+                {% for result in results %}
+                    <li>
+                        {% if search_type == 'degree' %}
+                            Degree: {{ result.name }} ({{ result.level }})
+                        {% elif search_type == 'course' %}
+                            Course: {{ result.course_number }} - {{ result.name }}
+                        {% elif search_type == 'instructor' %}
+                            Instructor: {{ result.name }} (ID: {{ result.instructor_id }})
+                        {% elif search_type == 'section' %}
+                            Section: {{ result.section_number }} - {{ result.course_id }} (Semester: {{ result.semester }})
+                        {% elif search_type == 'goal' %}
+                            Goal: {{ result.code }} - {{ result.description }}
+                        {% elif search_type == 'evaluation' %}
+                            Evaluation: {{ result.method }} - A: {{ result.num_a }}, B: {{ result.num_b }}, C: {{ result.num_c }}, F: {{ result.num_f }}
+                        {% endif %}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>No results found.</p>
+        {% endif %}
+        <a href="{{ url_for('index') }}">Back to Search</a>
+    </main>
+    <footer>
+        <p>&copy; 2023 Program Evaluation</p>
+    </footer>
+</body>
+</html>

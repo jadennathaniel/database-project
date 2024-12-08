@@ -1,6 +1,7 @@
 from flask import render_template, request, redirect, url_for, flash
 from app import app
-from models import add_degree, add_course, add_instructor, add_section, add_goal, associate_course_goal, get_degrees, get_all_courses, get_all_instructors
+from models import add_degree, add_course, add_instructor, add_section, add_goal, associate_course_goal, get_degrees, get_all_courses, get_all_instructors, get_degree, get_courses_by_number, get_instructors_by_id, get_sections_by_number, get_goals_by_code, get_evaluations_by_method
+
 
 @app.route('/')
 def index():
@@ -141,81 +142,115 @@ def add_goal_route():
 
     return render_template('add_goal.html', degrees=degrees)
 
-# @app.route('/associate_course_goal', methods=['GET', 'POST'])
-# def associate_course_goal_route():
-#     if request.method == 'POST':
-#         course_id = request.form['course_id']
-#         goal_id = request.form['goal_id']
-#         associate_course_goal(course_id, goal_id)
-#         return redirect(url_for('index'))
-#     return render_template('associate_course_goal.html')
+@app.route('/associate_course_goal', methods=['GET', 'POST'])
+def associate_course_goal_route():
+    if request.method == 'POST':
+        course_id = request.form['course_id']
+        goal_id = request.form['goal_id']
+        associate_course_goal(course_id, goal_id)
+        return redirect(url_for('index'))
+    return render_template('associate_course_goal.html')
 
 @app.route('/add_evaluation', methods=['GET', 'POST'])
 def add_evaluation_route():
-    if request.method == 'GET':
-        # Get parameters for filtering
-        semester = request.args.get('semester')
-        year = request.args.get('year')
-        instructor_id = request.args.get('instructor_id')
+    print("add_evaluation_route")
+#     if request.method == 'GET':
+#         # Get parameters for filtering
+#         semester = request.args.get('semester')
+#         year = request.args.get('year')
+#         instructor_id = request.args.get('instructor_id')
         
-        # Get sections taught by instructor in semester
-        if semester and year and instructor_id:
-            sections = get_instructor_sections(instructor_id, semester, year)
-        else:
-            sections = []
+#         # Get sections taught by instructor in semester
+#         if semester and year and instructor_id:
+#             sections = get_instructor_sections(instructor_id, semester, year)
+#         else:
+#             sections = []
             
-        return render_template('add_evaluation.html',
-                             sections=sections,
-                             semester=semester,
-                             year=year,
-                             instructor_id=instructor_id)
+#         return render_template('add_evaluation.html',
+#                              sections=sections,
+#                              semester=semester,
+#                              year=year,
+#                              instructor_id=instructor_id)
                              
-    elif request.method == 'POST':
-        try:
-            section_id = request.form.get('section_id')
-            goal_id = request.form.get('goal_id')
-            evaluation_method = request.form.get('evaluation_method')
-            num_a = int(request.form.get('num_a', 0))
-            num_b = int(request.form.get('num_b', 0))
-            num_c = int(request.form.get('num_c', 0))
-            num_f = int(request.form.get('num_f', 0))
-            improvement = request.form.get('improvement', '')
+#     elif request.method == 'POST':
+#         try:
+#             section_id = request.form.get('section_id')
+#             goal_id = request.form.get('goal_id')
+#             evaluation_method = request.form.get('evaluation_method')
+#             num_a = int(request.form.get('num_a', 0))
+#             num_b = int(request.form.get('num_b', 0))
+#             num_c = int(request.form.get('num_c', 0))
+#             num_f = int(request.form.get('num_f', 0))
+#             improvement = request.form.get('improvement', '')
 
-            # Validate required fields
-            if not all([section_id, goal_id, evaluation_method]):
-                raise ValueError("Section, goal and evaluation method are required")
+#             # Validate required fields
+#             if not all([section_id, goal_id, evaluation_method]):
+#                 raise ValueError("Section, goal and evaluation method are required")
 
-            # Validate grade counts are non-negative
-            if any(num < 0 for num in [num_a, num_b, num_c, num_f]):
-                raise ValueError("Grade counts must be non-negative")
+#             # Validate grade counts are non-negative
+#             if any(num < 0 for num in [num_a, num_b, num_c, num_f]):
+#                 raise ValueError("Grade counts must be non-negative")
 
-            add_evaluation(
-                section_id=section_id,
-                goal_id=goal_id,
-                evaluation_method=evaluation_method,
-                num_a=num_a,
-                num_b=num_b,
-                num_c=num_c,
-                num_f=num_f,
-                improvement_suggestion=improvement
-            )
+#             add_evaluation(
+#                 section_id=section_id,
+#                 goal_id=goal_id,
+#                 evaluation_method=evaluation_method,
+#                 num_a=num_a,
+#                 num_b=num_b,
+#                 num_c=num_c,
+#                 num_f=num_f,
+#                 improvement_suggestion=improvement
+#             )
 
-            flash('Evaluation added successfully', 'success')
-            return redirect(url_for('add_evaluation_route', 
-                                  semester=request.form.get('semester'),
-                                  year=request.form.get('year'),
-                                  instructor_id=request.form.get('instructor_id')))
+#             flash('Evaluation added successfully', 'success')
+#             return redirect(url_for('add_evaluation_route', 
+#                                   semester=request.form.get('semester'),
+#                                   year=request.form.get('year'),
+#                                   instructor_id=request.form.get('instructor_id')))
 
-        except ValueError as e:
-            flash(str(e), 'error')
-            return redirect(request.url)
-        except Exception as e:
-            flash('Error adding evaluation', 'error')
-            return redirect(request.url)
+#         except ValueError as e:
+#             flash(str(e), 'error')
+#             return redirect(request.url)
+#         except Exception as e:
+#             flash('Error adding evaluation', 'error')
+#             return redirect(request.url)
         
 @app.route('/search_route', methods=['GET', 'POST'])
 def search_route():
     if request.method == 'GET':
-        print("SEARCH GOT")
+        return render_template('search.html')
     elif request.method == 'POST':
-        print("SEARCH POST")
+        search_type = request.form.get('filter_type')
+        search_query = request.form.get('search_query')
+        
+        if search_type == 'degree':
+            degree_name = request.form.get('degree_name')
+            results = get_degree(degree_name)
+        elif search_type == 'course':
+            course_number = request.form.get('course_number')
+            from_semester = request.form.get('from_semester_course')
+            to_semester = request.form.get('to_semester_course')
+            results = get_courses_by_number(course_number, from_semester, to_semester)
+        elif search_type == 'instructor':
+            instructor_id = request.form.get('instructor_id')
+            from_semester = request.form.get('from_semester_instructor')
+            to_semester = request.form.get('to_semester_instructor')
+            results = get_instructors_by_id(instructor_id, from_semester, to_semester)
+        elif search_type == 'section':
+            section_number = request.form.get('section_number')
+            from_semester = request.form.get('from_semester_section')
+            to_semester = request.form.get('to_semester_section')
+            results = get_sections_by_number(section_number, from_semester, to_semester)
+        elif search_type == 'goal':
+            goal_code = request.form.get('goal_code')
+            results = get_goals_by_code(goal_code)
+        elif search_type == 'evaluation':
+            evaluation_method = request.form.get('evaluation_method')
+            results = get_evaluations_by_method(evaluation_method)
+        else:
+            results = []
+        
+        return render_template('search_results.html', results=results, search_type=search_type)
+    
+    return render_template('search.html')
+        

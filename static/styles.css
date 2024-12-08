@@ -7,20 +7,25 @@ html, body {
     background: #f0f8ff; /* Light blue-ish background */
 }
 
+/* Header styling */
 header {
     background: #4F83CC; /* Light blue header */
     padding: 40px 20px;
-    text-align: center;
+    text-align: center; /* Center text horizontally */
     color: #fff;
     border-bottom: 4px solid #FFFFFF; /* White accent line */
 }
 
+/* Center the h1 inside the header */
 header h1 {
     margin: 0;
     font-size: 2.5em;
     font-weight: normal;
+    text-align: center; /* Center text horizontally */
 }
 
+
+/* Center the main content */
 main {
     background: #fff; /* White main content area */
     padding: 40px 20px;
@@ -28,7 +33,19 @@ main {
     margin: 40px auto;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1); /* Soft shadow for depth */
     border-radius: 8px;
+    text-align: center; /* Center-align all text within the main area */
 }
+
+/* Center the h1 inside the main */
+main h1 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 2em;
+    color: #333;
+    font-weight: bold;
+    text-align: center; /* Explicitly center-align the heading */
+}
+
 
 main p {
     font-size: 1.1em;
@@ -60,4 +77,333 @@ footer p {
         margin: 20px;
         padding: 20px;
     }
+}
+
+/* Style the top-level h1 on the Add Degree page */
+body > h1 {
+    text-align: center;
+    margin-top: 40px;
+    color: #4F83CC;
+    font-size: 2em;
+}
+
+/* Style the form container */
+form {
+    max-width: 500px;
+    margin: 40px auto;
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* Style the form labels */
+form label {
+    display: block;
+    font-weight: bold;
+    margin-top: 15px;
+    margin-bottom: 5px;
+}
+
+/* Style the text inputs */
+form input[type="text"] {
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    box-sizing: border-box;
+}
+
+/* Style the submit button */
+form input[type="submit"] {
+    background: #4F83CC;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 20px;
+    font-weight: bold;
+}
+
+/* Change button color on hover for better interactivity */
+form input[type="submit"]:hover {
+    background: #3a68a3;
+}
+
+/* Dropdown (select) styling */
+select {
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    background: #fff;
+    font-size: 1em;
+    box-sizing: border-box;
+    margin-top: 10px;
+}
+
+select:focus {
+    outline: none;
+    border-color: #4F83CC;
+}
+
+/* Search bar styling */
+input[type="search"] {
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-size: 1em;
+    box-sizing: border-box;
+    margin-top: 10px;
+}
+
+input[type="search"]:focus {
+    outline: none;
+    border-color: #4F83CC;
+}
+
+/* Number input styling */
+input[type="number"] {
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-size: 1em;
+    box-sizing: border-box;
+    margin-top: 10px;
+}
+
+input[type="number"]:focus {
+    outline: none;
+    border-color: #4F83CC;
+}
+
+/* Paragraph text input (textarea) styling */
+textarea {
+    width: 100%;
+    height: 120px; /* Adjust as needed */
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-size: 1em;
+    box-sizing: border-box;
+    margin-top: 10px;
+    resize: vertical; /* Allows user to resize vertically if desired */
+}
+
+textarea:focus {
+    outline: none;
+    border-color: #4F83CC;
+}
+
+/* Radio Buttons & Checkboxes */
+input[type="radio"], input[type="checkbox"] {
+    margin-right: 5px;
+    vertical-align: middle;
+}
+
+/* Fieldsets & Legends */
+fieldset {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 20px;
+    margin-top: 20px;
+    background: #fff;
+}
+
+legend {
+    padding: 0 10px;
+    font-weight: bold;
+    color: #4F83CC;
+}
+
+/* Button container styling */
+.button-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* Three buttons per row */
+    gap: 20px; /* Space between buttons */
+    justify-items: center; /* Center align buttons within their grid cells */
+    margin-top: 20px;
+}
+
+/* Button styling */
+.button {
+    background: #4F83CC; /* Base button color */
+    color: #fff; /* White text color */
+    text-decoration: none;
+    font-size: 1.2em;
+    font-weight: bold;
+    padding: 15px 25px; /* Padding inside the button */
+    border-radius: 12px; /* Rounded corners */
+    text-align: center;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    display: inline-block; /* Ensures proper button sizing */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    width: 100%; /* Make buttons consistent in size */
+    max-width: 250px; /* Limit maximum button width */
+}
+
+/* Ensure link text inside the button is white */
+.button:link,
+.button:visited {
+    color: #fff; /* White text color */
+}
+
+/* Hover effect for buttons */
+.button:hover {
+    background: #3a68a3; /* Slightly darker shade */
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15); /* Enhance shadow on hover */
+    color: #fff; /* Ensure text remains white on hover */
+}
+
+/* Active state for buttons */
+.button:active {
+    background: #2f4f8a; /* Even darker shade */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Compressed shadow */
+    transform: scale(0.98); /* Slight button press effect */
+    color: #fff; /* Ensure text remains white when active */
+}
+
+
+/* Links inside the main content area */
+main a {
+    color: #4F83CC;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+main a:hover {
+    text-decoration: underline;
+}
+
+/* Highlighting required fields */
+input[required], select[required], textarea[required] {
+    border-left: 4px solid #4F83CC;
+    padding-left: 8px;
+}
+
+/* Error Message Styling */
+.error {
+    color: #c00;
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+/* Success Message Styling */
+.success {
+    color: #0a0;
+    font-weight: bold;
+    margin-top: 5px;
+}
+
+/* General Link Styling */
+a {
+    color: #4F83CC;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+/* Visited Links */
+a:visited {
+    color: #3a68a3;
+}
+
+/* Focus and Active States for Accessibility */
+a:focus, a:active {
+    outline: none;
+    text-decoration: underline;
+    color: #2b5998;
+}
+
+/* Styles for the "Search the Database" Section */
+/* Add this to the end of your existing styles.css */
+
+/* Section container */
+section {
+    background: #fff;
+    max-width: 800px;
+    margin: 40px auto;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+/* Section heading */
+section h1 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    text-align: center;
+    color: #4F83CC;
+    font-size: 1.8em;
+    font-weight: normal;
+}
+
+/* Form styling inside the section */
+section form {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+/* Labels for form fields */
+section form label {
+    font-weight: bold;
+    margin-top: 20px;
+    margin-bottom: 5px;
+}
+
+/* Select dropdown */
+section form select {
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    background: #fff;
+    font-size: 1em;
+    box-sizing: border-box;
+}
+
+/* Text input field */
+section form input[type="text"] {
+    width: 100%;
+    padding: 8px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    font-size: 1em;
+    box-sizing: border-box;
+}
+
+/* Submit button */
+section form button[type="submit"] {
+    background: #4F83CC;
+    color: #fff;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 20px;
+    align-self: flex-start;
+}
+
+/* Hover state for the submit button */
+section form button[type="submit"]:hover {
+    background: #3a68a3;
+}
+
+/* Spacing between form elements */
+section form label + select,
+section form label + input[type="text"] {
+    margin-bottom: 10px;
+}
+
+/* Handle line breaks in the code */
+section form br {
+    line-height: 0;
 }

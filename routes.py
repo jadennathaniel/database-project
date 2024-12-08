@@ -265,3 +265,10 @@ def add_evaluation_route():
             return redirect(request.url)
 
     return render_template('add_evaluation.html')
+        
+@app.route('/search_route', methods=['GET', 'POST'])
+def search_route():
+    if request.method == 'GET':
+        print("SEARCH GOT")
+    elif request.method == 'POST':
+        print("SEARCH POST")

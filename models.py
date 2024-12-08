@@ -47,6 +47,7 @@ def create_tables():
                 course_id INT NOT NULL,
                 semester VARCHAR(50) NOT NULL,
                 section_number CHAR(3) NOT NULL,
+                year INT NOT NULL DEFAULT 2024
                 instructor_id CHAR(8),
                 students_enrolled INT NOT NULL,
                 FOREIGN KEY (course_id) REFERENCES Courses(course_id),

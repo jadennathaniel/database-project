@@ -47,12 +47,12 @@ def create_tables():
                 course_id INT NOT NULL,
                 semester VARCHAR(50) NOT NULL,
                 section_number CHAR(3) NOT NULL,
-                year INT NOT NULL DEFAULT 2024
                 instructor_id CHAR(8),
                 students_enrolled INT NOT NULL,
                 FOREIGN KEY (course_id) REFERENCES Courses(course_id),
                 FOREIGN KEY (instructor_id) REFERENCES Instructors(instructor_id)
-            );
+);
+
         """)
 
         # Create Goals table
@@ -69,19 +69,18 @@ def create_tables():
         # Create Evaluations table
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS Evaluations (
-            evaluation_id INT AUTO_INCREMENT PRIMARY KEY,
-            section_id INT,     
-            goal_id INT,   
-            evaluation_method VARCHAR(255),
-            grade_A INT DEFAULT 0,   
-            grade_B INT DEFAULT 0,   
-            grade_C INT DEFAULT 0,   
-            grade_F INT DEFAULT 0,     
-            improvement_suggestion TEXT,     
-            is_complete ENUM('not_entered', 'partially_completed', 'completed') DEFAULT 'not_entered',     
-            FOREIGN KEY (section_id) REFERENCES Sections(section_id),     
-            FOREIGN KEY (goal_id) REFERENCES Goals(goal_id),     
-            UNIQUE KEY unique_section_goal (section_id, goal_id)
+                evaluation_id INT AUTO_INCREMENT PRIMARY KEY,
+                section_id INT NOT NULL,
+                goal_id INT NOT NULL,
+                evaluation_method VARCHAR(100),
+                grade_A INT DEFAULT 0,
+                grade_B INT DEFAULT 0,
+                grade_C INT DEFAULT 0,
+                grade_F INT DEFAULT 0,
+                improvement_notes TEXT,
+                is_complete BOOLEAN NOT NULL DEFAULT FALSE,
+                FOREIGN KEY (section_id) REFERENCES Sections(section_id),
+                FOREIGN KEY (goal_id) REFERENCES Goals(goal_id)
             );
         """)
 
@@ -545,7 +544,6 @@ def get_existing_evaluation(section_id, goal_id):
         eval_data = cursor.fetchone()
         
         if eval_data:
-            # Determine completion status based on filled fields
             filled_fields = sum(1 for field in [
                 eval_data['evaluation_method'],
                 eval_data['grade_A'],

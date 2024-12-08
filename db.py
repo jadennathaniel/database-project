@@ -2,6 +2,7 @@ import mysql.connector
 from config import Config
 
 def get_db_connection():
+    print("ATTEMPTING DATABASE CONNECTION")
     return mysql.connector.connect(
         host=Config.MYSQL_HOST,
         user=Config.MYSQL_USER,

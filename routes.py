@@ -150,4 +150,65 @@ def add_goal_route():
 #         return redirect(url_for('index'))
 #     return render_template('associate_course_goal.html')
 
-# Add more routes for other operations as needed
+@app.route('/add_evaluation', methods=['GET', 'POST'])
+def add_evaluation_route():
+    if request.method == 'GET':
+        # Get parameters for filtering
+        semester = request.args.get('semester')
+        year = request.args.get('year')
+        instructor_id = request.args.get('instructor_id')
+        
+        # Get sections taught by instructor in semester
+        if semester and year and instructor_id:
+            sections = get_instructor_sections(instructor_id, semester, year)
+        else:
+            sections = []
+            
+        return render_template('add_evaluation.html',
+                             sections=sections,
+                             semester=semester,
+                             year=year,
+                             instructor_id=instructor_id)
+                             
+    elif request.method == 'POST':
+        try:
+            section_id = request.form.get('section_id')
+            goal_id = request.form.get('goal_id')
+            evaluation_method = request.form.get('evaluation_method')
+            num_a = int(request.form.get('num_a', 0))
+            num_b = int(request.form.get('num_b', 0))
+            num_c = int(request.form.get('num_c', 0))
+            num_f = int(request.form.get('num_f', 0))
+            improvement = request.form.get('improvement', '')
+
+            # Validate required fields
+            if not all([section_id, goal_id, evaluation_method]):
+                raise ValueError("Section, goal and evaluation method are required")
+
+            # Validate grade counts are non-negative
+            if any(num < 0 for num in [num_a, num_b, num_c, num_f]):
+                raise ValueError("Grade counts must be non-negative")
+
+            add_evaluation(
+                section_id=section_id,
+                goal_id=goal_id,
+                evaluation_method=evaluation_method,
+                num_a=num_a,
+                num_b=num_b,
+                num_c=num_c,
+                num_f=num_f,
+                improvement_suggestion=improvement
+            )
+
+            flash('Evaluation added successfully', 'success')
+            return redirect(url_for('add_evaluation_route', 
+                                  semester=request.form.get('semester'),
+                                  year=request.form.get('year'),
+                                  instructor_id=request.form.get('instructor_id')))
+
+        except ValueError as e:
+            flash(str(e), 'error')
+            return redirect(request.url)
+        except Exception as e:
+            flash('Error adding evaluation', 'error')
+            return redirect(request.url)

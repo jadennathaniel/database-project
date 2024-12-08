@@ -19,7 +19,8 @@ def create_tables():
             CREATE TABLE IF NOT EXISTS Degrees (
                 degree_id INT AUTO_INCREMENT PRIMARY KEY,
                 name VARCHAR(255) NOT NULL,
-                level VARCHAR(50) NOT NULL
+                level VARCHAR(50) NOT NULL,
+                UNIQUE(name, level)
             );
         """)
 
@@ -120,18 +121,27 @@ def create_tables():
 
 
 def add_degree(name, level):
+    if not name or name.strip() == "":
+        raise ValueError("Degree name cannot be empty.")
+    if not level or level.strip() == "":
+        raise ValueError("Degree level cannot be empty.")
+
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
+        cursor.execute('SELECT COUNT(*) FROM Degrees WHERE name = %s AND level = %s', (name, level))
+        if cursor.fetchone()[0] > 0:
+            raise ValueError(f"The combination of degree name '{name}' and level '{level}' already exists.")
+
         cursor.execute('INSERT INTO Degrees (name, level) VALUES (%s, %s)', (name, level))
         conn.commit()
-    except Error as e:
-        print(f"Error adding degree: {e}")
+    except Exception as e:
         conn.rollback()
+        print(f"Database error: {e}")
+        raise e
     finally:
         cursor.close()
         conn.close()
-
 
 def get_degrees():
     conn = get_db_connection()

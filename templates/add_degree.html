@@ -8,10 +8,41 @@
     <h1>Add Degree</h1>
     <form method="post">
         <label for="name">Name:</label>
-        <input type="text" id="name" name="name"><br>
+        <input type="text" id="name" name="name" required><br>
+
         <label for="level">Level:</label>
-        <input type="text" id="level" name="level"><br>
+        <select id="level" name="level" onchange="toggleCustomLevel()" required>
+            <option value="">Select a level</option>
+            <option value="BA">BA</option>
+            <option value="BS">BS</option>
+            <option value="MS">MS</option>
+            <option value="PhD">PhD</option>
+            <option value="Cert">Cert</option>
+            <option value="custom">Other (Specify Below)</option>
+        </select><br>
+
+        <div id="customLevelContainer" style="display: none;">
+            <label for="custom_level">Custom Level:</label>
+            <input type="text" id="custom_level" name="custom_level"><br>
+        </div>
+
         <input type="submit" value="Add Degree">
     </form>
+
+    <script>
+        function toggleCustomLevel() {
+            const levelDropdown = document.getElementById("level");
+            const customLevelContainer = document.getElementById("customLevelContainer");
+            const customLevelInput = document.getElementById("custom_level");
+
+            if (levelDropdown.value === "custom") {
+                customLevelContainer.style.display = "block";
+                customLevelInput.required = true;
+            } else {
+                customLevelContainer.style.display = "none";
+                customLevelInput.required = false;
+            }
+        }
+    </script>
 </body>
 </html>

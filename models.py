@@ -1,6 +1,7 @@
 from db import get_db_connection
 from mysql.connector import Error
 
+
 def create_tables():
     conn = None
     cursor = None
@@ -12,7 +13,6 @@ def create_tables():
         cursor.execute("CREATE DATABASE IF NOT EXISTS ProgramEvaluation;")
         cursor.execute("USE ProgramEvaluation;")
         print("Using database: ProgramEvaluation")
-
 
         # Create Degrees table
         cursor.execute("""
@@ -93,6 +93,17 @@ def create_tables():
             );
         """)
 
+        # Create CourseGoals table (Many-to-Many relationship)
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS CourseGoals (
+                course_id INT NOT NULL,
+                goal_id INT NOT NULL,
+                PRIMARY KEY (course_id, goal_id),
+                FOREIGN KEY (course_id) REFERENCES Courses(course_id),
+                FOREIGN KEY (goal_id) REFERENCES Goals(goal_id)
+            );
+        """)
+
         conn.commit()
         print("Database and tables created successfully.")
 
@@ -105,13 +116,20 @@ def create_tables():
             conn.close()
             print("Database connection closed.")
 
+
 def add_degree(name, level):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute('INSERT INTO Degrees (name, level) VALUES (%s, %s)', (name, level))
-    conn.commit()
-    cursor.close()
-    conn.close()
+    try:
+        cursor.execute('INSERT INTO Degrees (name, level) VALUES (%s, %s)', (name, level))
+        conn.commit()
+    except Error as e:
+        print(f"Error adding degree: {e}")
+        conn.rollback()
+    finally:
+        cursor.close()
+        conn.close()
+
 
 def get_degrees():
     conn = get_db_connection()
@@ -122,21 +140,48 @@ def get_degrees():
     conn.close()
     return degrees
 
+
+def add_course(course_number, name, degree_ids):
+    if not isinstance(degree_ids, list):
+        raise ValueError("degree_ids must be a list")
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute('INSERT INTO Courses (course_number, name) VALUES (%s, %s)', (course_number, name))
+        course_id = cursor.lastrowid
+        
+        for degree_id in degree_ids:
+            cursor.execute('SELECT degree_id FROM Degrees WHERE degree_id = %s', (degree_id,))
+            if cursor.fetchone() is None:
+                raise ValueError(f"Degree ID {degree_id} does not exist")
+            cursor.execute('INSERT INTO DegreeCourses (course_id, degree_id) VALUES (%s, %s)', (course_id, degree_id))
+        
+        conn.commit()
+    except Error as e:
+        print(f"Error adding course: {e}")
+        conn.rollback()
+    finally:
+        cursor.close()
+        conn.close()
+
+
 def add_instructor(instructor_id, name):
     if not (isinstance(instructor_id, str) and len(instructor_id) == 8):
-        raise ValueError("instructor_id must be an 8-digit string") 
+        raise ValueError("instructor_id must be an 8-character string")
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
         cursor.execute('INSERT INTO Instructors (instructor_id, name) VALUES (%s, %s)', 
                       (instructor_id, name))
         conn.commit()
-    except Exception as e:
+    except Error as e:
+        print(f"Error adding instructor: {e}")
         conn.rollback()
-        raise e
     finally:
         cursor.close()
         conn.close()
+
 
 def get_all_courses():
     conn = get_db_connection()
@@ -147,6 +192,7 @@ def get_all_courses():
     conn.close()
     return courses
 
+
 def get_all_instructors():
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
@@ -156,10 +202,10 @@ def get_all_instructors():
     conn.close()
     return instructors
 
+
 def add_section(course_id, section_number, semester, instructor_id, students_enrolled):
     if not section_number.isdigit() or len(section_number) != 3:
         raise ValueError("Section number must be 3 digits")
-        
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
@@ -169,53 +215,32 @@ def add_section(course_id, section_number, semester, instructor_id, students_enr
             VALUES (%s, %s, %s, %s, %s)
         ''', (course_id, section_number, semester, instructor_id, students_enrolled))
         conn.commit()
-    except Exception as e:
+    except Error as e:
+        print(f"Error adding section: {e}")
         conn.rollback()
-        raise e
     finally:
         cursor.close()
         conn.close()
 
+
 def add_goal(degree_id, code, description):
-    # Validate inputs
     if not code or len(code) != 4:
         raise ValueError("Goal code must be exactly 4 characters")
-        
     if not description:
         raise ValueError("Description is required")
-        
     conn = get_db_connection()
     cursor = conn.cursor()
-    
     try:
-        # Check if degree exists
-        cursor.execute('SELECT degree_id FROM Degrees WHERE degree_id = %s', (degree_id,))
-        if not cursor.fetchone():
-            raise ValueError("Invalid degree ID")
-            
-        # Check if code is unique for this degree
-        cursor.execute('''
-            SELECT goal_id FROM Goals 
-            WHERE degree_id = %s AND code = %s
-        ''', (degree_id, code))
-        if cursor.fetchone():
-            raise ValueError(f"Goal code {code} already exists for this degree")
-            
-        # Insert the goal
-        cursor.execute('''
-            INSERT INTO Goals (degree_id, code, description)
-            VALUES (%s, %s, %s)
-        ''', (degree_id, code, description))
-        
+        cursor.execute('INSERT INTO Goals (degree_id, code, description) VALUES (%s, %s, %s)', 
+                       (degree_id, code, description))
         conn.commit()
-        
-    except Exception as e:
+    except Error as e:
+        print(f"Error adding goal: {e}")
         conn.rollback()
-        raise e
-        
     finally:
         cursor.close()
         conn.close()
+
 
 def associate_course_goal(course_id, goal_id):
     conn = get_db_connection()
@@ -228,87 +253,12 @@ def associate_course_goal(course_id, goal_id):
         cursor.execute('SELECT goal_id FROM Goals WHERE goal_id = %s', (goal_id,))
         if cursor.fetchone() is None:
             raise ValueError(f"Goal ID {goal_id} does not exist")
-
-        print(f"Associated Course ID {course_id} with Goal ID {goal_id}")
-        conn.commit()
-    except Error as e:
-        print(f"Error: {e}")
-        conn.rollback()
-    finally:
-        cursor.close()
-        conn.close()
-
-def add_course(course_number, name, degree_ids):
-    if not isinstance(degree_ids, list):
-        raise ValueError("degree_ids must be a list")
-    
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute('INSERT INTO Courses (course_number, name) VALUES (%s, %s)', (course_number, name))
-        course_id = cursor.lastrowid
-        print(course_id)
         
-        for degree_id in degree_ids:
-            cursor.execute('SELECT degree_id FROM Degrees WHERE degree_id = %s', (degree_id,))
-            if cursor.fetchone() is None:
-                raise ValueError(f"Degree ID {degree_id} does not exist")
-            cursor.execute('INSERT INTO DegreeCourses (course_id, degree_id) VALUES (%s, %s)', (course_id, degree_id))
-        
+        cursor.execute('INSERT INTO CourseGoals (course_id, goal_id) VALUES (%s, %s)', (course_id, goal_id))
         conn.commit()
     except Error as e:
-        print(f"Error: {e}")
+        print(f"Error associating course with goal: {e}")
         conn.rollback()
     finally:
         cursor.close()
         conn.close()
-
-def add_evaluation(section_id, goal_id, evaluation_method, grade_counts, improvement_notes=None):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute('''
-            INSERT INTO Evaluations 
-            (section_id, goal_id, evaluation_method, grade_A, grade_B, grade_C, grade_F, improvement_notes)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-        ''', (section_id, goal_id, evaluation_method, 
-              grade_counts.get('A', 0), grade_counts.get('B', 0), 
-              grade_counts.get('C', 0), grade_counts.get('F', 0), 
-              improvement_notes))
-        conn.commit()
-    except Error as e:
-        print(f"Error: {e}")
-        conn.rollback()
-    finally:
-        cursor.close()
-        conn.close()
-
-def get_sections_by_semester(semester):
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    try:
-        cursor.execute('SELECT * FROM Sections WHERE semester = %s', (semester,))
-        sections = cursor.fetchall()
-        return sections
-    finally:
-        cursor.close()
-        conn.close()
-
-def get_evaluation_status(semester):
-    conn = get_db_connection()
-    cursor = conn.cursor(dictionary=True)
-    try:
-        cursor.execute('''
-            SELECT s.section_id, s.course_id, s.section_number, s.semester,
-                   COUNT(e.evaluation_id) AS evaluation_count
-            FROM Sections s
-            LEFT JOIN Evaluations e ON s.section_id = e.section_id
-            WHERE s.semester = %s
-            GROUP BY s.section_id
-        ''', (semester,))
-        status = cursor.fetchall()
-        return status
-    finally:
-        cursor.close()
-        conn.close()
-

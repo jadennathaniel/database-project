@@ -19,7 +19,8 @@ def create_tables():
             CREATE TABLE IF NOT EXISTS Degrees (
                 degree_id INT AUTO_INCREMENT PRIMARY KEY,
                 name VARCHAR(255) NOT NULL,
-                level VARCHAR(50) NOT NULL
+                level VARCHAR(50) NOT NULL,
+                UNIQUE(name, level)
             );
         """)
 
@@ -52,7 +53,8 @@ def create_tables():
                 students_enrolled INT NOT NULL,
                 FOREIGN KEY (course_id) REFERENCES Courses(course_id),
                 FOREIGN KEY (instructor_id) REFERENCES Instructors(instructor_id)
-            );
+);
+
         """)
 
         # Create Goals table
@@ -69,19 +71,18 @@ def create_tables():
         # Create Evaluations table
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS Evaluations (
-            evaluation_id INT AUTO_INCREMENT PRIMARY KEY,
-            section_id INT,     
-            goal_id INT,   
-            evaluation_method VARCHAR(255),
-            grade_A INT DEFAULT 0,   
-            grade_B INT DEFAULT 0,   
-            grade_C INT DEFAULT 0,   
-            grade_F INT DEFAULT 0,     
-            improvement_suggestion TEXT,     
-            is_complete ENUM('not_entered', 'partially_completed', 'completed') DEFAULT 'not_entered',     
-            FOREIGN KEY (section_id) REFERENCES Sections(section_id),     
-            FOREIGN KEY (goal_id) REFERENCES Goals(goal_id),     
-            UNIQUE KEY unique_section_goal (section_id, goal_id)
+                evaluation_id INT AUTO_INCREMENT PRIMARY KEY,
+                section_id INT NOT NULL,
+                goal_id INT NOT NULL,
+                evaluation_method VARCHAR(100),
+                grade_A INT DEFAULT 0,
+                grade_B INT DEFAULT 0,
+                grade_C INT DEFAULT 0,
+                grade_F INT DEFAULT 0,
+                improvement_notes TEXT,
+                is_complete BOOLEAN NOT NULL DEFAULT FALSE,
+                FOREIGN KEY (section_id) REFERENCES Sections(section_id),
+                FOREIGN KEY (goal_id) REFERENCES Goals(goal_id)
             );
         """)
 
@@ -121,18 +122,27 @@ def create_tables():
 
 
 def add_degree(name, level):
+    if not name or name.strip() == "":
+        raise ValueError("Degree name cannot be empty.")
+    if not level or level.strip() == "":
+        raise ValueError("Degree level cannot be empty.")
+
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
+        cursor.execute('SELECT COUNT(*) FROM Degrees WHERE name = %s AND level = %s', (name, level))
+        if cursor.fetchone()[0] > 0:
+            raise ValueError(f"The combination of degree name '{name}' and level '{level}' already exists.")
+
         cursor.execute('INSERT INTO Degrees (name, level) VALUES (%s, %s)', (name, level))
         conn.commit()
-    except Error as e:
-        print(f"Error adding degree: {e}")
+    except Exception as e:
         conn.rollback()
+        print(f"Database error: {e}")
+        raise e
     finally:
         cursor.close()
         conn.close()
-
 
 def get_degrees():
     conn = get_db_connection()
@@ -546,7 +556,6 @@ def get_existing_evaluation(section_id, goal_id):
         eval_data = cursor.fetchone()
         
         if eval_data:
-            # Determine completion status based on filled fields
             filled_fields = sum(1 for field in [
                 eval_data['evaluation_method'],
                 eval_data['grade_A'],

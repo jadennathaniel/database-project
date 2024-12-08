@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html>
 <head>
     <title>Program Evaluation</title>
@@ -11,5 +11,33 @@
     <a href="{{ url_for('add_section_route') }}">Add Section</a><br>
     <a href="{{ url_for('add_goal_route') }}">Add Goal</a><br>
     <a href="{{ url_for('add_evaluation_route') }}">Add Evaluation</a><br>
+</body>
+</html> -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+    <!-- Set the title of the page -->
+    <title>CS5330 Final Project</title>
+
+    <!-- Link to the external CSS file -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+</head>
+<body>
+    <header>
+        <h1>Welcome to the CS5330 Final Project</h1>
+    </header>
+    <main>
+        <h1>Welcome to Program Evaluation</h1>
+        <a href="{{ url_for('add_degree_route') }}">Add Degree</a><br>
+        <a href="{{ url_for('add_course_route') }}">Add Course</a><br>
+        <a href="{{ url_for('add_instructor_route') }}">Add Instructor</a><br>
+        <a href="{{ url_for('add_section_route') }}">Add Section</a><br>    </main>
+    <footer>
+        <p>&copy; 2024 CS5330 Group 6 (Devon Coates, Jaden Nathaniel, Myles Miller, Chris Hirshcbrich)</p>
+    </footer>
 </body>
 </html>

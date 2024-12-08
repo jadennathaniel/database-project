@@ -7,20 +7,25 @@ html, body {
     background: #f0f8ff; /* Light blue-ish background */
 }
 
+/* Header styling */
 header {
     background: #4F83CC; /* Light blue header */
     padding: 40px 20px;
-    text-align: center;
+    text-align: center; /* Center text horizontally */
     color: #fff;
     border-bottom: 4px solid #FFFFFF; /* White accent line */
 }
 
+/* Center the h1 inside the header */
 header h1 {
     margin: 0;
     font-size: 2.5em;
     font-weight: normal;
+    text-align: center; /* Center text horizontally */
 }
 
+
+/* Center the main content */
 main {
     background: #fff; /* White main content area */
     padding: 40px 20px;
@@ -28,7 +33,19 @@ main {
     margin: 40px auto;
     box-shadow: 0 2px 10px rgba(0,0,0,0.1); /* Soft shadow for depth */
     border-radius: 8px;
+    text-align: center; /* Center-align all text within the main area */
 }
+
+/* Center the h1 inside the main */
+main h1 {
+    margin-top: 0;
+    margin-bottom: 20px;
+    font-size: 2em;
+    color: #333;
+    font-weight: bold;
+    text-align: center; /* Explicitly center-align the heading */
+}
+
 
 main p {
     font-size: 1.1em;
@@ -202,22 +219,53 @@ legend {
     color: #4F83CC;
 }
 
-/* Buttons (general) */
-.button, button {
-    background: #4F83CC;
-    color: #fff;
-    border: none;
-    padding: 10px 15px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: bold;
-    margin-top: 10px;
-    display: inline-block;
+/* Button container styling */
+.button-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* Three buttons per row */
+    gap: 20px; /* Space between buttons */
+    justify-items: center; /* Center align buttons within their grid cells */
+    margin-top: 20px;
 }
 
-.button:hover, button:hover {
-    background: #3a68a3;
+/* Button styling */
+.button {
+    background: #4F83CC; /* Base button color */
+    color: #fff; /* White text color */
+    text-decoration: none;
+    font-size: 1.2em;
+    font-weight: bold;
+    padding: 15px 25px; /* Padding inside the button */
+    border-radius: 12px; /* Rounded corners */
+    text-align: center;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+    display: inline-block; /* Ensures proper button sizing */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow for depth */
+    width: 100%; /* Make buttons consistent in size */
+    max-width: 250px; /* Limit maximum button width */
 }
+
+/* Ensure link text inside the button is white */
+.button:link,
+.button:visited {
+    color: #fff; /* White text color */
+}
+
+/* Hover effect for buttons */
+.button:hover {
+    background: #3a68a3; /* Slightly darker shade */
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15); /* Enhance shadow on hover */
+    color: #fff; /* Ensure text remains white on hover */
+}
+
+/* Active state for buttons */
+.button:active {
+    background: #2f4f8a; /* Even darker shade */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Compressed shadow */
+    transform: scale(0.98); /* Slight button press effect */
+    color: #fff; /* Ensure text remains white when active */
+}
+
 
 /* Links inside the main content area */
 main a {

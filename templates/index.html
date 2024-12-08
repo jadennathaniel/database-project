@@ -32,13 +32,15 @@
     </header>
     <main>
         <h1>Welcome to Program Evaluation</h1>
-        <a href="{{ url_for('add_degree_route') }}">Add Degree</a><br>
-        <a href="{{ url_for('add_course_route') }}">Add Course</a><br>
-        <a href="{{ url_for('add_instructor_route') }}">Add Instructor</a><br>
-        <a href="{{ url_for('add_section_route') }}">Add Section</a><br>
-        <a href="{{ url_for('add_goal_route') }}">Add Goal</a><br>
-        <a href="{{ url_for('add_evaluation_route') }}">Add Evaluation</a><br>
-    </main>
+        <div class="button-container">
+            <a href="{{ url_for('add_degree_route') }}" class="button">Add Degree</a>
+            <a href="{{ url_for('add_course_route') }}" class="button">Add Course</a>
+            <a href="{{ url_for('add_instructor_route') }}" class="button">Add Instructor</a>
+            <a href="{{ url_for('add_section_route') }}" class="button">Add Section</a>
+            <a href="{{ url_for('add_goal_route') }}" class="button">Add Goal</a>
+            <a href="{{ url_for('add_evaluation_route') }}" class="button">Add Evaluation</a>
+        </div>
+    </main>      
     <section>
         <h1>Search the Database</h1>
         <form action="{{ url_for('search_route') }}" method="GET">

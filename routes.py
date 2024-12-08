@@ -1,6 +1,6 @@
-from flask import render_template, request, redirect, url_for, flash
+from flask import jsonify, render_template, request, redirect, url_for, flash
 from app import app
-from models import add_degree, add_course, add_instructor, add_or_update_evaluation, add_section, add_goal, associate_course_goal, duplicate_evaluation, get_all_goals, get_degrees, get_all_courses, get_all_instructors, get_evaluation_status, get_existing_evaluation, get_goal_completion_status, get_instructor_sections, get_section_evaluations, get_section_goals
+from models import add_degree, add_course, add_instructor, add_or_update_evaluation, add_section, add_goal, associate_course_degree, associate_course_goal, duplicate_evaluation, get_all_goals, get_course_degrees, get_degrees, get_all_courses, get_all_instructors, get_evaluation_status, get_existing_evaluation, get_goal_completion_status, get_instructor_sections, get_section_evaluations, get_section_goals
 
 @app.route('/')
 def index():
@@ -79,12 +79,13 @@ def add_section_route():
             semester = request.form.get('semester')
             instructor_id = request.form.get('instructor_id')
             students_enrolled = request.form.get('students_enrolled')
+            year = request.form.get('year')
 
-            if not all([course_id, section_number, semester, instructor_id, students_enrolled]):
+            if not all([course_id, section_number, semester, instructor_id, students_enrolled, year]):
                 raise ValueError("All fields are required")
                 
             add_section(course_id, section_number, semester, 
-                       instructor_id, students_enrolled)
+                       instructor_id, students_enrolled, year)
             flash('Section added successfully', 'success')
             return redirect(url_for('index'))
             
@@ -175,6 +176,7 @@ def add_evaluation_route():
         semester = request.args.get('semester')
         instructor_id = request.args.get('instructor_id')
         section_id = request.args.get('section_id')
+        year = request.args.get('year')
         
         sections = []
         goals = []
@@ -182,7 +184,7 @@ def add_evaluation_route():
         existing_data = {}  # Store existing evaluation data
         
         if semester and instructor_id:
-            sections = get_instructor_sections(instructor_id, semester)
+            sections = get_instructor_sections(instructor_id, semester, year)
             
         if section_id:
             goals = get_section_goals(section_id)
@@ -272,3 +274,49 @@ def search_route():
         print("SEARCH GOT")
     elif request.method == 'POST':
         print("SEARCH POST")
+
+@app.route('/associate_course_degree', methods=['GET', 'POST'])
+def associate_course_degree_route():
+    if request.method == 'GET':
+        courses = get_all_courses()
+        degrees = get_degrees()
+        return render_template('associate_course_degree.html',
+                             courses=courses,
+                             degrees=degrees)
+                             
+    elif request.method == 'POST':
+        try:
+            course_id = request.form.get('course_id')
+            degree_ids = request.form.getlist('degree_ids')  # Handle multiple selections
+            
+            print(f"Received course_id: {course_id}")  # Debug log
+            print(f"Received degree_ids: {degree_ids}")  # Debug log
+            
+            if not course_id:
+                raise ValueError("Course must be selected")
+            if not degree_ids:
+                raise ValueError("At least one degree must be selected")
+                
+            # Convert to integers
+            course_id = int(course_id)
+            degree_ids = [int(d_id) for d_id in degree_ids]
+                
+            associate_course_degree(course_id, degree_ids)
+            flash('Course-degree associations created successfully', 'success')
+            
+            # Redirect back to same page to show updated associations
+            return redirect(url_for('associate_course_degree_route'))
+            
+        except ValueError as e:
+            print(f"Validation error: {str(e)}")  # Debug log
+            flash(str(e), 'error')
+            return redirect(url_for('associate_course_degree_route'))
+        except Exception as e:
+            print(f"Unexpected error: {str(e)}")  # Debug log
+            flash('Error creating association. Please try again.', 'error')
+            return redirect(url_for('associate_course_degree_route'))
+        
+@app.route('/get_course_degrees/<int:course_id>')
+def get_course_degrees_route(course_id):
+    existing_degrees = get_course_degrees(course_id)
+    return jsonify([d['degree_id'] for d in existing_degrees])

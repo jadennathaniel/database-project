@@ -47,7 +47,7 @@ def create_tables():
                 course_id INT NOT NULL,
                 semester VARCHAR(50) NOT NULL,
                 section_number CHAR(3) NOT NULL,
-                year INT NOT NULL DEFAULT 2024
+                year INT NOT NULL DEFAULT 2024,
                 instructor_id CHAR(8),
                 students_enrolled INT NOT NULL,
                 FOREIGN KEY (course_id) REFERENCES Courses(course_id),
@@ -206,7 +206,7 @@ def get_all_instructors():
     return instructors
 
 
-def add_section(course_id, section_number, semester, instructor_id, students_enrolled):
+def add_section(course_id, section_number, semester, instructor_id, students_enrolled, year):
     if not section_number.isdigit() or len(section_number) != 3:
         raise ValueError("Section number must be 3 digits")
     conn = get_db_connection()
@@ -214,9 +214,9 @@ def add_section(course_id, section_number, semester, instructor_id, students_enr
     try:
         cursor.execute('''
             INSERT INTO Sections 
-            (course_id, section_number, semester, instructor_id, students_enrolled)
-            VALUES (%s, %s, %s, %s, %s)
-        ''', (course_id, section_number, semester, instructor_id, students_enrolled))
+            (course_id, section_number, semester, instructor_id, students_enrolled, year)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        ''', (course_id, section_number, semester, instructor_id, students_enrolled, year))
         conn.commit()
     except Error as e:
         print(f"Error adding section: {e}")
@@ -283,7 +283,7 @@ def associate_course_goal(course_id, goal_id):
         cursor.close()
         conn.close()
 
-def get_instructor_sections(instructor_id, semester):
+def get_instructor_sections(instructor_id, semester, year):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     try:
@@ -293,7 +293,8 @@ def get_instructor_sections(instructor_id, semester):
             JOIN Courses c ON s.course_id = c.course_id
             WHERE s.instructor_id = %s 
             AND s.semester = %s
-        ''', (instructor_id, semester))
+            AND s.year = %s
+        ''', (instructor_id, semester, year))
         return cursor.fetchall()
     finally:
         cursor.close()
@@ -590,6 +591,74 @@ def get_evaluation_status(section_id):
             'not_entered': status['not_entered']
         }
         
+    finally:
+        cursor.close()
+        conn.close()
+
+def get_course_degrees(course_id):
+    """Get all degrees associated with a course"""
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute('''
+            SELECT d.* 
+            FROM Degrees d
+            JOIN DegreeCourses dc ON d.degree_id = dc.degree_id
+            WHERE dc.course_id = %s
+        ''', (course_id,))
+        return cursor.fetchall()
+    finally:
+        cursor.close()
+        conn.close()
+
+def associate_course_degree(course_id, degree_ids):
+    """
+    Associate a course with one or more degrees
+    Args:
+        course_id (int): Course ID to associate
+        degree_ids (list): List of degree IDs to associate with course
+    """
+    if not isinstance(degree_ids, list):
+        degree_ids = [degree_ids]
+        
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        # Verify course exists
+        cursor.execute('SELECT course_id FROM Courses WHERE course_id = %s', (course_id,))
+        if not cursor.fetchone():
+            raise ValueError(f"Course ID {course_id} does not exist")
+            
+        # Verify all degrees exist
+        for degree_id in degree_ids:
+            cursor.execute('SELECT degree_id FROM Degrees WHERE degree_id = %s', (degree_id,))
+            if not cursor.fetchone():
+                raise ValueError(f"Degree ID {degree_id} does not exist")
+                
+        # Check existing associations
+        for degree_id in degree_ids:
+            cursor.execute('''
+                SELECT 1 FROM DegreeCourses 
+                WHERE course_id = %s AND degree_id = %s
+            ''', (course_id, degree_id))
+            if cursor.fetchone():
+                print(f"Course {course_id} already associated with degree {degree_id}")
+                continue
+                
+            # Create new association
+            cursor.execute('''
+                INSERT INTO DegreeCourses (course_id, degree_id)
+                VALUES (%s, %s)
+            ''', (course_id, degree_id))
+            
+        conn.commit()
+        print(f"Successfully associated course {course_id} with degrees {degree_ids}")
+        
+    except Exception as e:
+        conn.rollback()
+        print(f"Error associating course with degrees: {str(e)}")
+        raise
     finally:
         cursor.close()
         conn.close()

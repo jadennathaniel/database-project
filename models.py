@@ -68,18 +68,19 @@ def create_tables():
         # Create Evaluations table
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS Evaluations (
-                evaluation_id INT AUTO_INCREMENT PRIMARY KEY,
-                section_id INT NOT NULL,
-                goal_id INT NOT NULL,
-                evaluation_method VARCHAR(100),
-                grade_A INT DEFAULT 0,
-                grade_B INT DEFAULT 0,
-                grade_C INT DEFAULT 0,
-                grade_F INT DEFAULT 0,
-                improvement_notes TEXT,
-                is_complete BOOLEAN NOT NULL DEFAULT FALSE,
-                FOREIGN KEY (section_id) REFERENCES Sections(section_id),
-                FOREIGN KEY (goal_id) REFERENCES Goals(goal_id)
+            evaluation_id INT AUTO_INCREMENT PRIMARY KEY,
+            section_id INT,     
+            goal_id INT,   
+            evaluation_method VARCHAR(255),
+            grade_A INT DEFAULT 0,   
+            grade_B INT DEFAULT 0,   
+            grade_C INT DEFAULT 0,   
+            grade_F INT DEFAULT 0,     
+            improvement_suggestion TEXT,     
+            is_complete ENUM('not_entered', 'partially_completed', 'completed') DEFAULT 'not_entered',     
+            FOREIGN KEY (section_id) REFERENCES Sections(section_id),     
+            FOREIGN KEY (goal_id) REFERENCES Goals(goal_id),     
+            UNIQUE KEY unique_section_goal (section_id, goal_id)
             );
         """)
 

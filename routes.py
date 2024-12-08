@@ -218,7 +218,7 @@ def add_evaluation_route():
 @app.route('/search_route', methods=['GET', 'POST'])
 def search_route():
     if request.method == 'GET':
-        return render_template('search.html')
+        return render_template('search_results.html')
     elif request.method == 'POST':
         search_type = request.form.get('filter_type')
         search_query = request.form.get('search_query')
@@ -251,6 +251,4 @@ def search_route():
             results = []
         
         return render_template('search_results.html', results=results, search_type=search_type)
-    
-    return render_template('search.html')
         

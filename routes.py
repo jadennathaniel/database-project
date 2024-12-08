@@ -25,7 +25,6 @@ def add_degree_route():
 
 
 @app.route('/add_course', methods=['GET', 'POST'])
-@app.route('/add_course', methods=['GET', 'POST'])
 def add_course_route():
     degrees = get_degrees()
     if request.method == 'POST':

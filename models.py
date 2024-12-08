@@ -88,12 +88,13 @@ def create_tables():
 
         # Create DegreeCourses table (Many-to-Many relationship)
         cursor.execute("""
-            CREATE TABLE IF NOT EXISTS DegreeCourses (
+                CREATE TABLE IF NOT EXISTS DegreeCourses (
                 degree_id INT NOT NULL,
                 course_id INT NOT NULL,
+                core BOOLEAN NOT NULL DEFAULT FALSE,  -- New column for "Core Course"
                 PRIMARY KEY (degree_id, course_id),
                 FOREIGN KEY (degree_id) REFERENCES Degrees(degree_id),
-                FOREIGN KEY (course_id) REFERENCES Courses(course_id)
+            FOREIGN KEY (course_id) REFERENCES Courses(course_id)
             );
         """)
 
@@ -161,15 +162,18 @@ def add_course(course_number, name, degree_ids, is_core=False):
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute('INSERT INTO Courses (course_number, name, core) VALUES (%s, %s, %s)', 
-                       (course_number, name, is_core))
+        cursor.execute('INSERT INTO Courses (course_number, name) VALUES (%s, %s)', 
+                       (course_number, name))
         course_id = cursor.lastrowid
 
         for degree_id in degree_ids:
             cursor.execute('SELECT degree_id FROM Degrees WHERE degree_id = %s', (degree_id,))
             if cursor.fetchone() is None:
                 raise ValueError(f"Degree ID {degree_id} does not exist")
-            cursor.execute('INSERT INTO DegreeCourses (course_id, degree_id) VALUES (%s, %s)', (course_id, degree_id))
+            cursor.execute('''
+                INSERT INTO DegreeCourses (course_id, degree_id, core) 
+                VALUES (%s, %s, %s)
+            ''', (course_id, degree_id, is_core))
 
         conn.commit()
     except Error as e:

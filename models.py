@@ -154,22 +154,23 @@ def get_degrees():
     return degrees
 
 
-def add_course(course_number, name, degree_ids):
+def add_course(course_number, name, degree_ids, is_core=False):
     if not isinstance(degree_ids, list):
         raise ValueError("degree_ids must be a list")
-    
+
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute('INSERT INTO Courses (course_number, name) VALUES (%s, %s)', (course_number, name))
+        cursor.execute('INSERT INTO Courses (course_number, name, core) VALUES (%s, %s, %s)', 
+                       (course_number, name, is_core))
         course_id = cursor.lastrowid
-        
+
         for degree_id in degree_ids:
             cursor.execute('SELECT degree_id FROM Degrees WHERE degree_id = %s', (degree_id,))
             if cursor.fetchone() is None:
                 raise ValueError(f"Degree ID {degree_id} does not exist")
             cursor.execute('INSERT INTO DegreeCourses (course_id, degree_id) VALUES (%s, %s)', (course_id, degree_id))
-        
+
         conn.commit()
     except Error as e:
         print(f"Error adding course: {e}")

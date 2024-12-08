@@ -3,24 +3,6 @@
 <head>
     <title>Add Course</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
-    <style>
-        .checkbox-wrapper {
-            display: flex;
-            align-items: center;
-            margin-bottom: 8px;
-        }
-        .checkbox-wrapper input[type="checkbox"] {
-            margin-right: 8px;
-            width: 18px;
-            height: 18px;
-        }
-        .checkbox-wrapper label {
-            cursor: pointer;
-        }
-        .checkbox-group {
-            margin: 15px 0;
-        }
-    </style>
 </head>
 <body>
     <h1>Add Course</h1>
@@ -31,32 +13,26 @@
         <label for="name">Course Name:</label>
         <input type="text" id="name" name="name" required><br>
         
-        <div class="checkbox-group">
-            <label>Degrees:</label>
-            {% for degree in degrees %}
-                <div class="checkbox-wrapper">
-                    <input type="checkbox" 
-                           id="degree_{{ degree.id }}" 
-                           name="degree_ids" 
-                           value="{{ degree.degree_id }}">
-                    <label for="degree_{{ degree.id }}">
-                        {{ degree.name }} ({{ degree.level }})
-                    </label>
-                </div>
-            {% endfor %}
-        </div>
-
+        <label for="degrees">Degrees:</label><br>
+        {% for degree in degrees %}
+            <input type="checkbox" id="degree_{{ degree.degree_id }}" name="degree_ids" value="{{ degree.degree_id }}">
+            <label for="degree_{{ degree.degree_id }}">{{ degree.name }} ({{ degree.level }})</label><br>
+        {% endfor %}
+        
+        <label for="is_core">Core Course:</label>
+        <input type="checkbox" id="is_core" name="is_core"><br>
+        
         <input type="submit" value="Add Course">
     </form>
-    
+
     {% with messages = get_flashed_messages() %}
-        {% if messages %}
-            <ul>
-                {% for message in messages %}
-                    <li>{{ message }}</li>
-                {% endfor %}
-            </ul>
-        {% endif %}
+      {% if messages %}
+        <ul>
+          {% for message in messages %}
+            <li>{{ message }}</li>
+          {% endfor %}
+        </ul>
+      {% endif %}
     {% endwith %}
 </body>
 </html>

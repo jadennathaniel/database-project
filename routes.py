@@ -25,24 +25,26 @@ def add_degree_route():
 
 
 @app.route('/add_course', methods=['GET', 'POST'])
+@app.route('/add_course', methods=['GET', 'POST'])
 def add_course_route():
     degrees = get_degrees()
     if request.method == 'POST':
         course_number = request.form['course_number']
         name = request.form['name']
         degree_ids = request.form.getlist('degree_ids')
+        is_core = 'is_core' in request.form
         try:
-            add_course(course_number, name, degree_ids)
+            add_course(course_number, name, degree_ids, is_core)
             flash('Course added successfully!', 'success')
             return redirect(url_for('index'))
         except ValueError as e:
             flash(str(e), 'error')
         except Exception as e:
-            # Log the unexpected error
-            print(f"Unexpected error: {e}")  # Logs the error to the terminal
+            print(f"Unexpected error: {e}")
             flash('An unexpected error occurred. Please try again.', 'error')
 
     return render_template('add_course.html', degrees=degrees)
+
 
 
 @app.route('/add_instructor', methods=['GET', 'POST'])

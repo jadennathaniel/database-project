@@ -77,6 +77,7 @@ def create_tables():
                 grade_C INT DEFAULT 0,
                 grade_F INT DEFAULT 0,
                 improvement_notes TEXT,
+                is_complete BOOLEAN NOT NULL DEFAULT FALSE,
                 FOREIGN KEY (section_id) REFERENCES Sections(section_id),
                 FOREIGN KEY (goal_id) REFERENCES Goals(goal_id)
             );
@@ -241,6 +242,23 @@ def add_goal(degree_id, code, description):
         cursor.close()
         conn.close()
 
+def get_all_goals():    
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    try:
+        cursor.execute('''
+            SELECT g.*, d.name as degree_name, d.level as degree_level
+            FROM Goals g
+            JOIN Degrees d ON g.degree_id = d.degree_id
+        ''')
+        goals = cursor.fetchall()
+        return goals
+        
+    finally:
+        cursor.close()
+        conn.close()
+
 
 def associate_course_goal(course_id, goal_id):
     conn = get_db_connection()
@@ -259,6 +277,317 @@ def associate_course_goal(course_id, goal_id):
     except Error as e:
         print(f"Error associating course with goal: {e}")
         conn.rollback()
+    finally:
+        cursor.close()
+        conn.close()
+
+def get_instructor_sections(instructor_id, semester):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute('''
+            SELECT s.*, c.course_number, c.name as course_name
+            FROM Sections s
+            JOIN Courses c ON s.course_id = c.course_id
+            WHERE s.instructor_id = %s 
+            AND s.semester = %s
+        ''', (instructor_id, semester))
+        return cursor.fetchall()
+    finally:
+        cursor.close()
+        conn.close()
+
+def get_section_evaluations(section_id):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute('''
+            SELECT e.*, g.code as goal_code, g.description as goal_description,
+                   d.name as degree_name, d.level as degree_level
+            FROM Evaluations e
+            JOIN Goals g ON e.goal_id = g.goal_id
+            JOIN Degrees d ON g.degree_id = d.degree_id
+            WHERE e.section_id = %s
+        ''', (section_id,))
+        return cursor.fetchall()
+    finally:
+        cursor.close()
+        conn.close()
+
+def get_section_goals(section_id):
+    """Get all goals that need evaluation for this section"""
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        print(f"Getting goals for section {section_id}")  # Debug log
+        
+        cursor.execute('''
+            SELECT DISTINCT g.*, d.name as degree_name, d.level as degree_level
+            FROM Sections s
+            JOIN Courses c ON s.course_id = c.course_id
+            JOIN CourseGoals cg ON c.course_id = cg.course_id
+            JOIN Goals g ON cg.goal_id = g.goal_id
+            JOIN Degrees d ON g.degree_id = d.degree_id
+            WHERE s.section_id = %s
+        ''', (section_id,))
+        
+        goals = cursor.fetchall()
+        print(f"Found {len(goals)} goals")  # Debug log
+        return goals
+        
+    except Exception as e:
+        print(f"Error getting goals: {e}")  # Debug log
+        raise
+    finally:
+        cursor.close()
+        conn.close()
+
+def add_or_update_evaluation(section_id, goal_id, evaluation_method, 
+                           num_a, num_b, num_c, num_f, improvement_suggestion=None):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Determine completion status
+    filled_fields = sum(1 for field in [evaluation_method, num_a, num_b, num_c, num_f] if field)
+    if filled_fields == 0:
+        completion_status = 'not_entered'
+    elif filled_fields < 5:
+        completion_status = 'partially_completed'
+    else:
+        completion_status = 'completed'
+        
+    try:
+        cursor.execute('''
+            SELECT evaluation_id FROM Evaluations
+            WHERE section_id = %s AND goal_id = %s
+        ''', (section_id, goal_id))
+        existing = cursor.fetchone()
+        
+        if existing:
+            cursor.execute('''
+                UPDATE Evaluations 
+                SET evaluation_method = %s,
+                    grade_A = %s,
+                    grade_B = %s,
+                    grade_C = %s,
+                    grade_F = %s,
+                    improvement_suggestion = %s,
+                    is_complete = %s
+                WHERE section_id = %s AND goal_id = %s
+            ''', (evaluation_method, num_a, num_b, num_c, num_f,
+                  improvement_suggestion, completion_status, section_id, goal_id))
+        else:
+            cursor.execute('''
+                INSERT INTO Evaluations (
+                    section_id, goal_id, evaluation_method,
+                    grade_A, grade_B, grade_C, grade_F,
+                    improvement_suggestion, is_complete
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ''', (section_id, goal_id, evaluation_method,
+                  num_a, num_b, num_c, num_f,
+                  improvement_suggestion, completion_status))
+        
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        cursor.close()
+        conn.close()
+
+def get_goal_completion_status(section_id, goal_id):
+    """Get completion status for a specific goal"""
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute('''
+            SELECT evaluation_method, grade_A, grade_B, grade_C, grade_F,
+                   improvement_suggestion, is_complete
+            FROM Evaluations
+            WHERE section_id = %s AND goal_id = %s
+        ''', (section_id, goal_id))
+        eval_data = cursor.fetchone()
+        
+        if not eval_data:
+            return {
+                'status': 'not_entered',
+                'completed_fields': 0,
+                'total_fields': 5,
+                'has_improvement': False
+            }
+            
+        filled_fields = sum(1 for field in [
+            eval_data['evaluation_method'],
+            eval_data['grade_A'],
+            eval_data['grade_B'],
+            eval_data['grade_C'],
+            eval_data['grade_F']
+        ] if field is not None)
+        
+        return {
+            'status': eval_data['is_complete'],
+            'completed_fields': filled_fields,
+            'total_fields': 5,
+            'has_improvement': bool(eval_data['improvement_suggestion'])
+        }
+        
+    finally:
+        cursor.close()
+        conn.close()
+
+def save_evaluation(section_id, goal_id, data):
+    """Save or update evaluation data"""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Determine completion status
+    filled_fields = sum(1 for field in [
+        data['evaluation_method'],
+        data['grade_A'],
+        data['grade_B'],
+        data['grade_C'],
+        data['grade_F']
+    ] if field)
+    
+    if filled_fields == 0:
+        completion_status = 'not_entered'
+    elif filled_fields < 5:
+        completion_status = 'partially_completed'
+    else:
+        completion_status = 'completed'
+    
+    try:
+        cursor.execute('''
+            INSERT INTO Evaluations (
+                section_id, goal_id, evaluation_method,
+                grade_A, grade_B, grade_C, grade_F,
+                improvement_suggestion, is_complete
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ON DUPLICATE KEY UPDATE
+                evaluation_method = VALUES(evaluation_method),
+                grade_A = VALUES(grade_A),
+                grade_B = VALUES(grade_B),
+                grade_C = VALUES(grade_C),
+                grade_F = VALUES(grade_F),
+                improvement_suggestion = VALUES(improvement_suggestion),
+                is_complete = VALUES(is_complete)
+        ''', (
+            section_id, goal_id,
+            data['evaluation_method'],
+            data['grade_A'], data['grade_B'],
+            data['grade_C'], data['grade_F'],
+            data['improvement_suggestion'],
+            completion_status
+        ))
+        conn.commit()
+    finally:
+        cursor.close()
+        conn.close()
+
+def duplicate_evaluation(from_goal_id, to_goal_id, section_id):
+    """Copy evaluation from one goal to another"""
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute('''
+            SELECT evaluation_method, grade_A, grade_B, grade_C, grade_F,
+                   improvement_suggestion, is_complete
+            FROM Evaluations
+            WHERE section_id = %s AND goal_id = %s
+        ''', (section_id, from_goal_id))
+        
+        source_eval = cursor.fetchone()
+        if not source_eval:
+            raise ValueError("Source evaluation not found")
+            
+        add_or_update_evaluation(
+            section_id=section_id,
+            goal_id=to_goal_id,
+            evaluation_method=source_eval['evaluation_method'],
+            num_a=source_eval['grade_A'],
+            num_b=source_eval['grade_B'],
+            num_c=source_eval['grade_C'],
+            num_f=source_eval['grade_F'],
+            improvement_suggestion=source_eval['improvement_suggestion']
+        )
+        
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        cursor.close()
+        conn.close()
+
+def get_existing_evaluation(section_id, goal_id):
+    """
+    Get existing evaluation data for a section's goal
+    Returns: Dictionary with evaluation data or None if not found
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    
+    try:
+        cursor.execute('''
+            SELECT evaluation_id,
+                   evaluation_method,
+                   grade_A,
+                   grade_B,
+                   grade_C,
+                   grade_F,
+                   improvement_suggestion,
+                   is_complete
+            FROM Evaluations
+            WHERE section_id = %s AND goal_id = %s
+        ''', (section_id, goal_id))
+        
+        eval_data = cursor.fetchone()
+        
+        if eval_data:
+            # Determine completion status based on filled fields
+            filled_fields = sum(1 for field in [
+                eval_data['evaluation_method'],
+                eval_data['grade_A'],
+                eval_data['grade_B'],
+                eval_data['grade_C'],
+                eval_data['grade_F']
+            ] if field is not None)
+            
+            if filled_fields == 0:
+                eval_data['is_complete'] = 'not_entered'
+            elif filled_fields < 5:  # Not all required fields are filled
+                eval_data['is_complete'] = 'partially_completed'
+            else:
+                eval_data['is_complete'] = 'completed'
+                
+        return eval_data
+        
+    finally:
+        cursor.close()
+        conn.close()
+
+def get_evaluation_status(section_id):
+    """Get completion status of evaluations for a section"""
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute('''
+            SELECT 
+                COUNT(*) as total_goals,
+                SUM(CASE WHEN e.is_complete = 'completed' THEN 1 ELSE 0 END) as completed,
+                SUM(CASE WHEN e.is_complete = 'partially_completed' THEN 1 ELSE 0 END) as partial,
+                SUM(CASE WHEN e.is_complete = 'not_entered' OR e.is_complete IS NULL THEN 1 ELSE 0 END) as not_entered
+            FROM Evaluations e
+            WHERE e.section_id = %s
+        ''', (section_id,))
+        
+        status = cursor.fetchone()
+        return {
+            'total': status['total_goals'],
+            'completed': status['completed'],
+            'partial': status['partial'],
+            'not_entered': status['not_entered']
+        }
+        
     finally:
         cursor.close()
         conn.close()

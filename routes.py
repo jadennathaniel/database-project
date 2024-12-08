@@ -99,15 +99,47 @@ def add_section_route():
                          courses=courses,
                          instructors=instructors)
 
-# @app.route('/add_goal', methods=['GET', 'POST'])
-# def add_goal_route():
-#     if request.method == 'POST':
-#         degree_id = request.form['degree_id']
-#         code = request.form['code']
-#         description = request.form['description']
-#         add_goal(degree_id, code, description)
-#         return redirect(url_for('index'))
-#     return render_template('add_goal.html')
+@app.route('/add_goal', methods=['GET', 'POST'])
+def add_goal_route():
+    # Get all degrees for dropdown
+    degrees = get_degrees()
+    
+    if request.method == 'POST':
+        try:
+            degree_id = request.form.get('degree_id', '').strip()
+            print(degree_id)
+            code = request.form.get('code', '').strip()
+            print(code)
+            description = request.form.get('description', '').strip()
+            print(description)
+
+            # Validate required fields
+            if not all([degree_id, code, description]):
+                raise ValueError("All fields are required")
+
+            # Validate code format
+            if len(code) != 4:
+                raise ValueError("Goal code must be exactly 4 characters")
+
+            add_goal(degree_id, code, description)
+            flash('Goal added successfully', 'success')
+            return redirect(url_for('index'))
+
+        except ValueError as e:
+            flash(str(e), 'error')
+            return render_template('add_goal.html',
+                                degrees=degrees,
+                                code=code,
+                                description=description), 400
+                                
+        except Exception as e:
+            flash('An error occurred while adding the goal', 'error')
+            return render_template('add_goal.html',
+                                degrees=degrees,
+                                code=code, 
+                                description=description), 500
+
+    return render_template('add_goal.html', degrees=degrees)
 
 # @app.route('/associate_course_goal', methods=['GET', 'POST'])
 # def associate_course_goal_route():

@@ -174,8 +174,46 @@ def add_section(course_id, section_number, semester, instructor_id, students_enr
         cursor.close()
         conn.close()
 
-def add_goal():
-    pass
+def add_goal(degree_id, code, description):
+    # Validate inputs
+    if not code or len(code) != 4:
+        raise ValueError("Goal code must be exactly 4 characters")
+        
+    if not description:
+        raise ValueError("Description is required")
+        
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    try:
+        # Check if degree exists
+        cursor.execute('SELECT degree_id FROM Degrees WHERE degree_id = %s', (degree_id,))
+        if not cursor.fetchone():
+            raise ValueError("Invalid degree ID")
+            
+        # Check if code is unique for this degree
+        cursor.execute('''
+            SELECT goal_id FROM Goals 
+            WHERE degree_id = %s AND code = %s
+        ''', (degree_id, code))
+        if cursor.fetchone():
+            raise ValueError(f"Goal code {code} already exists for this degree")
+            
+        # Insert the goal
+        cursor.execute('''
+            INSERT INTO Goals (degree_id, code, description)
+            VALUES (%s, %s, %s)
+        ''', (degree_id, code, description))
+        
+        conn.commit()
+        
+    except Exception as e:
+        conn.rollback()
+        raise e
+        
+    finally:
+        cursor.close()
+        conn.close()
 
 def associate_course_goal():
     pass

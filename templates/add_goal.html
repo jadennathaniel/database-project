@@ -2,17 +2,97 @@
 <html>
 <head>
     <title>Add Goal</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        select, input, textarea {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .error {
+            color: red;
+            margin-bottom: 10px;
+        }
+        .success {
+            color: green;
+            margin-bottom: 10px;
+        }
+    </style>
 </head>
 <body>
     <h1>Add Goal</h1>
-    <form method="post">
-        <label for="degree_id">Degree ID:</label>
-        <input type="text" id="degree_id" name="degree_id" required><br>
-        <label for="code">Goal Code:</label>
-        <input type="text" id="code" name="code" required><br>
-        <label for="description">Description:</label>
-        <textarea id="description" name="description" required></textarea><br>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form method="post" onsubmit="return validateForm()">
+        <div class="form-group">
+            <label for="degree_id">Degree:</label>
+            <select name="degree_id" id="degree_id" required>
+                <option value="">Select Degree</option>
+                {% for degree in degrees %}
+                <option value="{{ degree.degree_id }}">{{ degree.name }} ({{ degree.level }})</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="code">Goal Code (4 characters):</label>
+            <input type="text" 
+                   id="code" 
+                   name="code" 
+                   maxlength="4"    
+                   pattern=".{4,4}"
+                   title="Goal code must be exactly 4 characters"
+                   value="{{ code or '' }}"
+                   required>
+        </div>
+
+        <div class="form-group">
+            <label for="description">Description:</label>
+            <textarea id="description" 
+                      name="description" 
+                      rows="4"
+                      required>{{ description or '' }}</textarea>
+        </div>
+
         <input type="submit" value="Add Goal">
     </form>
+
+    <script>
+        function validateForm() {
+            const code = document.getElementById('code').value;
+            if (code.length !== 4) {
+                alert('Goal code must be exactly 4 characters');
+                return false;
+            }
+            return true;
+        }
+    </script>
 </body>
 </html>

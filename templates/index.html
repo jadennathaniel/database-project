@@ -44,6 +44,7 @@
         <form action="{{ url_for('search_route') }}" method="GET">
             <label for="filter-type">Filter By:</label>
             <select name="filter_type" id="filter-type">
+                <option value="">Select a filter...</option>
                 <option value="degree">Degree</option>
                 <option value="course">Course</option>
                 <option value="instructor">Instructor</option>
@@ -51,13 +52,79 @@
                 <option value="goal">Goal</option>
                 <option value="evaluation">Evaluation</option>
             </select>
-            <br><br>
-            <label for="search-query">Search Query:</label>
-            <input type="text" id="search-query" name="search_query" placeholder="Enter your search query" />
+    
+            <!-- DEGREE FIELDS -->
+            <div class="filter-fields degree-fields" style="display:none;">
+                <label for="degree-name">Degree Name:</label>
+                <input type="text" id="degree-name" name="degree_name" placeholder="e.g. Computer Science" />
+            </div>
+    
+            <!-- COURSE FIELDS -->
+            <div class="filter-fields course-fields" style="display:none;">
+                <label for="course-number">Course Number:</label>
+                <input type="text" id="course-number" name="course_number" placeholder="e.g. CS101" />
+                <br><br>
+                <label for="from-semester-course">From Semester:</label>
+                <input type="text" id="from-semester-course" name="from_semester_course" placeholder="e.g. Fall 2023" />
+                <br><br>
+                <label for="to-semester-course">To Semester:</label>
+                <input type="text" id="to-semester-course" name="to_semester_course" placeholder="e.g. Spring 2024" />
+            </div>
+    
+            <!-- INSTRUCTOR FIELDS -->
+            <div class="filter-fields instructor-fields" style="display:none;">
+                <label for="instructor-id">Instructor ID:</label>
+                <input type="text" id="instructor-id" name="instructor_id" placeholder="8-char instructor ID" />
+                <br><br>
+                <label for="from-semester-instructor">From Semester:</label>
+                <input type="text" id="from-semester-instructor" name="from_semester_instructor" placeholder="e.g. Fall 2023" />
+                <br><br>
+                <label for="to-semester-instructor">To Semester:</label>
+                <input type="text" id="to-semester-instructor" name="to_semester_instructor" placeholder="e.g. Spring 2024" />
+            </div>
+    
+            <!-- SECTION FIELDS -->
+            <div class="filter-fields section-fields" style="display:none;">
+                <label for="section-number">Section Number:</label>
+                <input type="text" id="section-number" name="section_number" placeholder="3-digit section number" />
+                <br><br>
+                <label for="from-semester-section">From Semester:</label>
+                <input type="text" id="from-semester-section" name="from_semester_section" placeholder="e.g. Fall 2023" />
+                <br><br>
+                <label for="to-semester-section">To Semester:</label>
+                <input type="text" id="to-semester-section" name="to_semester_section" placeholder="e.g. Spring 2024" />
+            </div>
+    
+            <!-- GOAL FIELDS -->
+            <div class="filter-fields goal-fields" style="display:none;">
+                <label for="goal-code">Goal Code:</label>
+                <input type="text" id="goal-code" name="goal_code" placeholder="4-char goal code" />
+            </div>
+    
+            <!-- EVALUATION FIELDS -->
+            <div class="filter-fields evaluation-fields" style="display:none;">
+                <label for="evaluation-method">Evaluation Method:</label>
+                <input type="text" id="evaluation-method" name="evaluation_method" placeholder="e.g. Exam, Project" />
+            </div>
+    
             <br><br>
             <button type="submit">Search</button>
         </form>
     </section>
+    <script>
+    document.getElementById('filter-type').addEventListener('change', function() {
+        // Hide all filter-fields by default
+        const allFields = document.querySelectorAll('.filter-fields');
+        allFields.forEach(fieldSet => fieldSet.style.display = 'none');
+    
+        const selectedFilter = this.value;
+        if (!selectedFilter) return; // If "Select a filter..." chosen, do nothing further
+    
+        // Show the fields corresponding to the selected filter
+        const fieldsToShow = document.querySelectorAll('.' + selectedFilter + '-fields');
+        fieldsToShow.forEach(fieldSet => fieldSet.style.display = 'block');
+    });
+    </script>     
     <footer>
         <p>&copy; 2024 CS5330 Group 6 (Devon Coates, Jaden Nathaniel, Myles Miller, Chris Hirshcbrich)</p>
     </footer>

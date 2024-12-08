@@ -361,7 +361,7 @@ def get_section_goals(section_id):
         conn.close()
 
 def add_or_update_evaluation(section_id, goal_id, evaluation_method, 
-                           num_a, num_b, num_c, num_f, improvement_suggestion=None):
+                           num_a, num_b, num_c, num_f, improvement_notes=None):
     conn = get_db_connection()
     cursor = conn.cursor()
     
@@ -389,21 +389,21 @@ def add_or_update_evaluation(section_id, goal_id, evaluation_method,
                     grade_B = %s,
                     grade_C = %s,
                     grade_F = %s,
-                    improvement_suggestion = %s,
+                    improvement_notes = %s,
                     is_complete = %s
                 WHERE section_id = %s AND goal_id = %s
             ''', (evaluation_method, num_a, num_b, num_c, num_f,
-                  improvement_suggestion, completion_status, section_id, goal_id))
+                  improvement_notes, completion_status, section_id, goal_id))
         else:
             cursor.execute('''
                 INSERT INTO Evaluations (
                     section_id, goal_id, evaluation_method,
                     grade_A, grade_B, grade_C, grade_F,
-                    improvement_suggestion, is_complete
+                    improvement_notes, is_complete
                 ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             ''', (section_id, goal_id, evaluation_method,
                   num_a, num_b, num_c, num_f,
-                  improvement_suggestion, completion_status))
+                  improvement_notes, completion_status))
         
         conn.commit()
     except Exception as e:
@@ -420,7 +420,7 @@ def get_goal_completion_status(section_id, goal_id):
     try:
         cursor.execute('''
             SELECT evaluation_method, grade_A, grade_B, grade_C, grade_F,
-                   improvement_suggestion, is_complete
+                improvement_notes, is_complete
             FROM Evaluations
             WHERE section_id = %s AND goal_id = %s
         ''', (section_id, goal_id))
@@ -446,7 +446,7 @@ def get_goal_completion_status(section_id, goal_id):
             'status': eval_data['is_complete'],
             'completed_fields': filled_fields,
             'total_fields': 5,
-            'has_improvement': bool(eval_data['improvement_suggestion'])
+            'has_improvement': bool(eval_data['improvement_notes'])
         }
         
     finally:
@@ -479,7 +479,7 @@ def save_evaluation(section_id, goal_id, data):
             INSERT INTO Evaluations (
                 section_id, goal_id, evaluation_method,
                 grade_A, grade_B, grade_C, grade_F,
-                improvement_suggestion, is_complete
+                improvement_notes, is_complete
             ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON DUPLICATE KEY UPDATE
                 evaluation_method = VALUES(evaluation_method),
@@ -487,14 +487,14 @@ def save_evaluation(section_id, goal_id, data):
                 grade_B = VALUES(grade_B),
                 grade_C = VALUES(grade_C),
                 grade_F = VALUES(grade_F),
-                improvement_suggestion = VALUES(improvement_suggestion),
+                improvement_notes = VALUES(improvement_notes),
                 is_complete = VALUES(is_complete)
         ''', (
             section_id, goal_id,
             data['evaluation_method'],
             data['grade_A'], data['grade_B'],
             data['grade_C'], data['grade_F'],
-            data['improvement_suggestion'],
+            data['improvement_notes'],
             completion_status
         ))
         conn.commit()
@@ -509,7 +509,7 @@ def duplicate_evaluation(from_goal_id, to_goal_id, section_id):
     try:
         cursor.execute('''
             SELECT evaluation_method, grade_A, grade_B, grade_C, grade_F,
-                   improvement_suggestion, is_complete
+                   improvement_notes, is_complete
             FROM Evaluations
             WHERE section_id = %s AND goal_id = %s
         ''', (section_id, from_goal_id))
@@ -526,7 +526,7 @@ def duplicate_evaluation(from_goal_id, to_goal_id, section_id):
             num_b=source_eval['grade_B'],
             num_c=source_eval['grade_C'],
             num_f=source_eval['grade_F'],
-            improvement_suggestion=source_eval['improvement_suggestion']
+            improvement_notes=source_eval['improvement_notes']
         )
         
     except Exception as e:
@@ -552,7 +552,7 @@ def get_existing_evaluation(section_id, goal_id):
                    grade_B,
                    grade_C,
                    grade_F,
-                   improvement_suggestion,
+                   improvement_notes,
                    is_complete
             FROM Evaluations
             WHERE section_id = %s AND goal_id = %s

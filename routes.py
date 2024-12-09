@@ -270,127 +270,117 @@ def add_evaluation_route():
             flash('Error saving evaluation', 'error')
             print(f"Error: {str(e)}")
             return redirect(request.url)
-<<<<<<< Updated upstream
 
-    flash('Invalid request', 'error')
-    return redirect(url_for('index'))
-
-=======
->>>>>>> Stashed changes
         
 from flask import request
 
 @app.route('/search_route', methods=['GET'])
 def search_route():
-    filter_type = request.args.get('filter_type', '')
+    filter_type = request.args.get('filter_type', '').strip().lower()
 
+    # If no filter_type provided or invalid one
+    if not filter_type or filter_type not in ['degree', 'course', 'instructor', 'section', 'goal', 'evaluation']:
+        return "No valid filter type selected."
+
+    # DEGREE FILTER
     if filter_type == 'degree':
-        # We assume we have a function to get all degrees: get_degrees()
-        # If no dedicated "get" method for searching exists, we implement filtering here.
         degree_name = request.args.get('degree_name', '').strip()
-        all_degrees = get_degrees()  # returns a list of degrees, each presumably dict-like with 'name' key
-        # Filter by name if provided
+        all_degrees = get_degrees()  # Returns a list of dicts with keys like 'degree_id', 'name', 'level'
+        
         filtered_degrees = []
-        if degree_name:
-            filtered_degrees = [d for d in all_degrees if degree_name.lower() in d['name'].lower()]
-        else:
-            filtered_degrees = all_degrees
-
-        # Render your results or return JSON
+        for d in all_degrees:
+            # If a degree_name filter is present, only include degrees that match
+            if degree_name and degree_name.lower() not in d['name'].lower():
+                continue
+            filtered_degrees.append(d)
+        
         return render_template('search_results.html', results=filtered_degrees, filter_type='degree')
 
+    # COURSE FILTER
     elif filter_type == 'course':
-        # Implement or call a "get_courses" function. If not implemented, write it.
-        # Let's assume we have a function get_courses() that returns all courses.
         course_number = request.args.get('course_number', '').strip()
         from_semester = request.args.get('from_semester_course', '').strip()
         to_semester = request.args.get('to_semester_course', '').strip()
 
-        # Hypothetical: get_courses() returns all courses. If not, implement get_courses().
-        all_courses = get_all_courses()  
-        # Now filter them based on the provided parameters
+        all_courses = get_all_courses()  # Returns a list of dicts, e.g. {'course_id':..., 'course_number':..., 'name':..., 'is_core':...}
+        
         filtered_courses = []
         for c in all_courses:
-            # Assume each course has 'course_number', 'semester', etc.
-            # If semester details are tracked differently, adjust filtering accordingly.
+            # Filter by course_number if provided
             if course_number and course_number.lower() not in c['course_number'].lower():
                 continue
-            # If we have semester info per course, you'd filter by date range.
-            # Since specifics are not given, assume these filters are optional.
-            # If "from_semester" and "to_semester" represent some comparable values, filter accordingly.
-            # For example, if we store semester as a string like "Fall 2023", we might need a proper comparison method.
-            # For now, let's skip semester-range filtering, or assume a simplistic check.
-            
+            # If needed, implement semester filtering logic here. For now, we return all if no semester filter is given.
+            # If from_semester or to_semester are provided, add comparison logic.
             filtered_courses.append(c)
 
         return render_template('search_results.html', results=filtered_courses, filter_type='course')
 
+    # INSTRUCTOR FILTER
     elif filter_type == 'instructor':
         instructor_id = request.args.get('instructor_id', '').strip()
         from_semester = request.args.get('from_semester_instructor', '').strip()
         to_semester = request.args.get('to_semester_instructor', '').strip()
 
-        # Implement a get_instructors() function if not available or filter from get_all_instructors()
-        all_instructors = get_all_instructors()
+        all_instructors = get_all_instructors()  # Returns a list of dicts, e.g. {'id': ..., 'name': ...}
+        
         filtered_instructors = []
         for i in all_instructors:
-            # Assume each instructor dict has 'id' and possibly associated sections/semesters.
-            if instructor_id and instructor_id != i['id']:
+            # Filter by instructor_id if provided
+            if instructor_id and i['id'] != instructor_id:
                 continue
-            # Filtering by semester range would require instructor assignment data.
-            # If not available, skip or implement as needed.
+            # If needed, implement semester-based filtering for instructors
             filtered_instructors.append(i)
 
         return render_template('search_results.html', results=filtered_instructors, filter_type='instructor')
 
+    # SECTION FILTER
     elif filter_type == 'section':
         section_number = request.args.get('section_number', '').strip()
         from_semester = request.args.get('from_semester_section', '').strip()
         to_semester = request.args.get('to_semester_section', '').strip()
 
-        # Assume a get_all_sections() function exists or implement it if it doesn't.
-        all_sections = get_all_sections()  # You need to implement this in models if it doesn't exist.
+        all_sections = get_all_sections() # Returns a list of dicts, e.g. {'section_id':..., 'section_number':..., 'semester':..., 'year':...}
+        
         filtered_sections = []
         for s in all_sections:
-            # Assume each section has 'section_number' and 'semester'.
-            if section_number and section_number != s['section_number']:
+            # Filter by section_number if provided
+            if section_number and s['section_number'] != section_number:
                 continue
-            # Semester filtering logic can be added if we have structured semester data.
+            # If needed, implement semester-based filtering
             filtered_sections.append(s)
 
         return render_template('search_results.html', results=filtered_sections, filter_type='section')
 
+    # GOAL FILTER
     elif filter_type == 'goal':
         goal_code = request.args.get('goal_code', '').strip()
 
-        # Assume a get_all_goals() function exists. We have it from the imports.
-        all_goals = get_all_goals()
+        all_goals = get_all_goals()  # Returns a list of dicts, e.g. {'goal_id':..., 'code':..., 'description':..., 'degree_id':...}
+        
         filtered_goals = []
         for g in all_goals:
+            # Filter by goal_code if provided
             if goal_code and goal_code.lower() not in g['code'].lower():
                 continue
             filtered_goals.append(g)
 
         return render_template('search_results.html', results=filtered_goals, filter_type='goal')
 
+    # EVALUATION FILTER
     elif filter_type == 'evaluation':
         evaluation_method = request.args.get('evaluation_method', '').strip()
 
-        # If no get method for evaluations, implement one.
-        # Let's assume we have get_all_evaluations(). If not, create it.
-        all_evaluations = get_all_evaluations()  # You need to implement this in models if not existing.
+        all_evaluations = get_all_evaluations()  # Returns a list of dicts, e.g. {'evaluation_id':..., 'evaluation_method':..., ...}
+        
         filtered_evaluations = []
         for e in all_evaluations:
-            # Assume each evaluation has 'evaluation_method' field.
+            # Filter by evaluation_method if provided
             if evaluation_method and evaluation_method.lower() not in e['evaluation_method'].lower():
                 continue
             filtered_evaluations.append(e)
 
         return render_template('search_results.html', results=filtered_evaluations, filter_type='evaluation')
 
-    else:
-        # If no filter_type or unknown filter_type is selected.
-        return "No valid filter type selected."
 
 @app.route('/associate_course_degree', methods=['GET', 'POST'])
 def associate_course_degree_route():

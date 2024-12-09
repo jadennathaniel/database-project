@@ -191,86 +191,82 @@ def associate_course_goal_route():
 @app.route('/add_evaluation', methods=['GET', 'POST'])
 def add_evaluation_route():
     if request.method == 'GET':
-        semester = request.args.get('semester')
-        instructor_id = request.args.get('instructor_id')
-        section_id = request.args.get('section_id')
-        year = request.args.get('year')
+        try:
+            semester = request.args.get('semester')
+            instructor_id = request.args.get('instructor_id')
+            section_id = request.args.get('section_id')
+            year = request.args.get('year')
 
-        sections = []
-        goals = []
-        goal_statuses = {}
-        existing_data = {}
-        other_degrees = get_degrees()  # Fetch all degrees for duplication
+            sections = []
+            goals = []
+            goal_statuses = {}
+            existing_data = {}
+            other_degrees = get_degrees()
 
-        if semester and instructor_id:
-            sections = get_instructor_sections(instructor_id, semester, year)
+            if semester and instructor_id:
+                sections = get_instructor_sections(instructor_id, semester, year)
 
-        if section_id:
-            goals = get_section_goals(section_id)
-            for goal in goals:
-                status = get_goal_completion_status(section_id, goal['goal_id'])
-                goal_statuses[goal['goal_id']] = status
+            if section_id:
+                goals = get_section_goals(section_id)
+                for goal in goals:
+                    status = get_goal_completion_status(section_id, goal['goal_id'])
+                    goal_statuses[goal['goal_id']] = status
+                    eval_data = get_existing_evaluation(section_id, goal['goal_id'])
+                    if eval_data:
+                        existing_data[goal['goal_id']] = eval_data
 
-                eval_data = get_existing_evaluation(section_id, goal['goal_id'])
-                if eval_data:
-                    existing_data[goal['goal_id']] = eval_data
+            return render_template('add_evaluation.html',
+                                sections=sections,
+                                goals=goals,
+                                goal_statuses=goal_statuses,
+                                existing_data=existing_data,
+                                semester=semester,
+                                instructor_id=instructor_id,
+                                section_id=section_id,
+                                year=year,
+                                other_degrees=other_degrees)
 
-        return render_template(
-            'add_evaluation.html',
-            sections=sections,
-            goals=goals,
-            goal_statuses=goal_statuses,
-            existing_data=existing_data,
-            semester=semester,
-            instructor_id=instructor_id,
-            section_id=section_id,
-            other_degrees=other_degrees  # Pass the degrees to the template
-        )
+        except Exception as e:
+            print(f"Error in GET: {str(e)}")
+            flash(str(e), 'error')
+            return redirect(url_for('index'))
 
     elif request.method == 'POST':
         try:
             section_id = request.form.get('section_id')
             goal_id = request.form.get('goal_id')
-            save_as_draft = request.form.get('save_as_draft') == 'true'
-
-            data = {
-                'evaluation_method': request.form.get('evaluation_method'),
-                'grade_A': int(request.form.get('num_a', '0')),
-                'grade_B': int(request.form.get('num_b', '0')),
-                'grade_C': int(request.form.get('num_c', '0')),
-                'grade_F': int(request.form.get('num_f', '0')),
-                'improvement_suggestion': request.form.get('improvement', ''),
-            }
+            evaluation_method = request.form.get('evaluation_method')
+            num_a = int(request.form.get('num_a', 0))
+            num_b = int(request.form.get('num_b', 0))
+            num_c = int(request.form.get('num_c', 0))
+            num_f = int(request.form.get('num_f', 0))
+            improvement = request.form.get('improvement', '')
 
             add_or_update_evaluation(
                 section_id=section_id,
                 goal_id=goal_id,
-                evaluation_method=data['evaluation_method'],
-                num_a=data['grade_A'],
-                num_b=data['grade_B'],
-                num_c=data['grade_C'],
-                num_f=data['grade_F'],
-                improvement_notes=data['improvement_suggestion'],
+                evaluation_method=evaluation_method,
+                num_a=num_a,
+                num_b=num_b,
+                num_c=num_c,
+                num_f=num_f,
+                improvement_notes=improvement
             )
 
-            duplicate_to_degrees = request.form.getlist('duplicate_to_degrees')
-            if duplicate_to_degrees:
-                for degree_id in duplicate_to_degrees:
-                    duplicate_evaluation(goal_id, degree_id, section_id)
+            flash('Evaluation saved successfully', 'success')
+            return redirect(url_for('add_evaluation_route', 
+                                  semester=request.args.get('semester'),
+                                  year=request.args.get('year'),
+                                  instructor_id=request.args.get('instructor_id'),
+                                  section_id=section_id))
 
-            if save_as_draft:
-                flash('Evaluation saved as draft', 'success')
-            else:
-                flash('Evaluation completed successfully', 'success')
-                return redirect(url_for('index'))
-
-        except ValueError as e:
+        except Exception as e:
+            print(f"Error in POST: {str(e)}")
             flash(str(e), 'error')
             return redirect(request.url)
-        except Exception as e:
-            flash('Error saving evaluation', 'error')
-            print(f"Error: {str(e)}")
-            return redirect(request.url)
+
+    # Default return for unexpected method
+    return render_template('add_evaluation.html')
 
         
 from flask import request

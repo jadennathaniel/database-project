@@ -36,12 +36,15 @@
                                 <th>Level</th>
                             </tr>
                         {% elif filter_type == 'course' %}
-                            <tr>
-                                <th>Course ID</th>
-                                <th>Course Number</th>
-                                <th>Course Name</th>
-                                <th>Is Core</th>
-                            </tr>
+                        <tr>
+                            <th>Course Number</th>
+                            <th>Course Name</th>
+                            <th>Section Number</th>
+                            <th>Semester</th>
+                            <th>Year</th>
+                            <th>Instructor Name</th>
+                            <th>Students Enrolled</th>
+                        </tr>
                         {% elif filter_type == 'instructor' %}
                             <tr>
                                 <th>Instructor ID</th>
@@ -86,10 +89,13 @@
                                     <td>{{ item.name }}</td>
                                     <td>{{ item.level }}</td>
                                 {% elif filter_type == 'course' %}
-                                    <td>{{ item.course_id }}</td>
                                     <td>{{ item.course_number }}</td>
-                                    <td>{{ item.name }}</td>
-                                    <td>{{ 'Yes' if item.is_core else 'No' }}</td>
+                                    <td>{{ item.course_name }}</td>
+                                    <td>{{ item.section_number }}</td>
+                                    <td>{{ item.semester }}</td>
+                                    <td>{{ item.year }}</td>
+                                    <td>{{ item.instructor_name }}</td>
+                                    <td>{{ item.students_enrolled }}</td>
                                 {% elif filter_type == 'instructor' %}
                                     <td>{{ item.instructor_id }}</td>
                                     <td>{{ item.name }}</td>

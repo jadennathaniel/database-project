@@ -303,18 +303,51 @@ def search_route():
         from_semester = request.args.get('from_semester_course', '').strip()  # currently unused
         to_semester = request.args.get('to_semester_course', '').strip()      # currently unused
 
-        all_courses = get_all_courses()  # Returns a list of dicts (course_id, course_number, name, etc.)
-        
-        filtered_courses = []
+        all_courses = get_all_courses()  # Returns a list of dicts, e.g. {'course_id':..., 'course_number':..., 'name':..., 'is_core':...}
+        all_sections = get_all_sections()  # Returns a list of dicts, e.g. {'section_id':..., 'course_id':..., 'semester':..., 'year':...}
+
+        def semester_to_tuple(semester):
+            """Convert semester string to a tuple (year, semester) for comparison."""
+            sem, year = semester.split()
+            sem_order = {'spring': 1, 'summer': 2, 'fall': 3}
+            return (int(year), sem_order[sem.lower()])
+
+        filtered_sections = []
         for c in all_courses:
             # Filter by course_number if provided
             if course_number and course_number.lower() not in c['course_number'].lower():
                 continue
-            # If needed, implement semester logic here
-            filtered_courses.append(c)
 
-        return render_template('search_results.html', results=filtered_courses, filter_type='course')
+            # Filter sections by course_id and semester range
+            for s in all_sections:
+                if s['course_id'] == c['course_id']:
+                    if from_semester and to_semester:
+                        from_sem_tuple = semester_to_tuple(from_semester)
+                        to_sem_tuple = semester_to_tuple(to_semester)
+                        section_sem_tuple = semester_to_tuple(f"{s['semester']} {s['year']}")
+                        if from_sem_tuple <= section_sem_tuple <= to_sem_tuple:
+                            filtered_sections.append({
+                                'course_number': c['course_number'],
+                                'course_name': c['name'],
+                                'section_number': s['section_number'],
+                                'semester': s['semester'],
+                                'year': s['year'],
+                                'instructor_name': s.get('instructor_name', 'N/A'),
+                                'students_enrolled': s.get('students_enrolled', 'N/A')
+                            })
+                    else:
+                        filtered_sections.append({
+                            'course_number': c['course_number'],
+                            'course_name': c['name'],
+                            'section_number': s['section_number'],
+                            'semester': s['semester'],
+                            'year': s['year'],
+                            'instructor_name': s.get('instructor_name', 'N/A'),
+                            'students_enrolled': s.get('students_enrolled', 'N/A')
+                        })
 
+        return render_template('search_results.html', results=filtered_sections, filter_type='course')
+    
     # INSTRUCTOR FILTER
     elif filter_type == 'instructor':
         instructor_id = request.args.get('instructor_id', '').strip()

@@ -48,8 +48,6 @@
                 <option value="degree">Degree</option>
                 <option value="course">Course</option>
                 <option value="instructor">Instructor</option>
-                <option value="section">Section</option>
-                <option value="goal">Goal</option>
                 <option value="evaluation">Evaluation</option>
             </select>
     
@@ -63,6 +61,12 @@
             <div class="filter-fields course-fields" style="display:none;">
                 <label for="course-number">Course Number:</label>
                 <input type="text" id="course-number" name="course_number" placeholder="e.g. CS101" />
+                <br><br>
+                <label for="from-semester-course">From Semester:</label>
+                <input type="text" id="from-semester-course" name="from_semester_course" placeholder="e.g. Fall 2023" />
+                <br><br>
+                <label for="to-semester-course">To Semester:</label>
+                <input type="text" id="to-semester-course" name="to_semester_course" placeholder="e.g. Spring 2024" />
             </div>
     
             <!-- INSTRUCTOR FIELDS -->
@@ -86,25 +90,7 @@
                 <label for="to-year-instructor">To Year:</label>
                 <input type="text" id="to-year-instructor" name="to_year_instructor" placeholder="e.g. 2024" />
             </div>
-    
-            <!-- SECTION FIELDS -->
-            <div class="filter-fields section-fields" style="display:none;">
-                <label for="section-number">Section Number:</label>
-                <input type="text" id="section-number" name="section_number" placeholder="3-digit section number" />
-                <br><br>
-                <label for="from-semester-section">From Semester:</label>
-                <input type="text" id="from-semester-section" name="from_semester_section" placeholder="e.g. Fall 2023" />
-                <br><br>
-                <label for="to-semester-section">To Semester:</label>
-                <input type="text" id="to-semester-section" name="to_semester_section" placeholder="e.g. Spring 2024" />
-            </div>
-    
-            <!-- GOAL FIELDS -->
-            <div class="filter-fields goal-fields" style="display:none;">
-                <label for="goal-code">Goal Code:</label>
-                <input type="text" id="goal-code" name="goal_code" placeholder="4-char goal code" />
-            </div>
-    
+            
             <!-- EVALUATION FIELDS -->
             <div class="filter-fields evaluation-fields" style="display:none;">
                 <label for="evaluation-method">Evaluation Method:</label>
@@ -114,16 +100,6 @@
             <br><br>
             <button type="submit">Search</button>
         </form>
-        <!-- index.html - Update degree query links -->
-        <div class="nav-section">
-            <h2>Degree Queries</h2>
-            <div class="button-grid">
-                <a href="{{ url_for('select_degree_route', query_type='courses') }}" class="button query-button">View Courses by Degree</a>
-                <a href="{{ url_for('select_degree_route', query_type='sections') }}" class="button query-button">View Sections by Degree</a>
-                <a href="{{ url_for('select_degree_route', query_type='goals') }}" class="button query-button">View Goals by Degree</a>
-                <a href="{{ url_for('select_degree_route', query_type='goal_courses') }}" class="button query-button">View Courses by Goals</a>
-            </div>
-        </div>
     </section>
     <script>
     document.getElementById('filter-type').addEventListener('change', function() {

@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+
+    <!-- Set the title of the page -->
+    <title>Search Results - CS5330 Final Project</title>
+
+    <!-- Link to the external CSS file -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+</head>
+<body>
+    <header>
+        <h1>CS5330 Final Project - Search Results</h1>
+    </header>
+    <main>
+        <div class="button-container">
+            <a href="{{ url_for('add_degree_route') }}" class="button">Add Degree</a>
+            <a href="{{ url_for('add_course_route') }}" class="button">Add Course</a>
+            <a href="{{ url_for('add_instructor_route') }}" class="button">Add Instructor</a>
+            <a href="{{ url_for('add_section_route') }}" class="button">Add Section</a>
+            <a href="{{ url_for('add_goal_route') }}" class="button">Add Goal</a>
+            <a href="{{ url_for('add_evaluation_route') }}" class="button">Add Evaluation</a>
+            <a href="{{ url_for('associate_course_goal_route') }}" class="button">Associate Course with Goal</a>
+            <a href="{{ url_for('associate_course_degree_route') }}" class="button">Associate Course with Degree</a>
+            <a href="{{ url_for('index') }}" class="button">Home</a>
+        </div>
+
+        <section>
+            <h2>Search Results for "{{ filter_type | capitalize }}"</h2>
+
+            {% if results %}
+                <table>
+                    <thead>
+                        {% if filter_type == 'degree' %}
+                            <tr>
+                                <th>Degree ID</th>
+                                <th>Degree Name</th>
+                                <th>Level</th>
+                            </tr>
+                        {% elif filter_type == 'course' %}
+                            <tr>
+                                <th>Course ID</th>
+                                <th>Course Number</th>
+                                <th>Course Name</th>
+                                <th>Is Core</th>
+                            </tr>
+                        {% elif filter_type == 'instructor' %}
+                            <tr>
+                                <th>Instructor ID</th>
+                                <th>Name</th>
+                            </tr>
+                        {% elif filter_type == 'section' %}
+                            <tr>
+                                <th>Section ID</th>
+                                <th>Section Number</th>
+                                <th>Semester</th>
+                                <th>Year</th>
+                                <th>Course ID</th>
+                                <th>Instructor ID</th>
+                                <th>Students Enrolled</th>
+                            </tr>
+                        {% elif filter_type == 'goal' %}
+                            <tr>
+                                <th>Goal ID</th>
+                                <th>Goal Code</th>
+                                <th>Description</th>
+                                <th>Degree ID</th>
+                            </tr>
+                        {% elif filter_type == 'evaluation' %}
+                            <tr>
+                                <th>Evaluation ID</th>
+                                <th>Section ID</th>
+                                <th>Goal ID</th>
+                                <th>Evaluation Method</th>
+                                <th>Grade A</th>
+                                <th>Grade B</th>
+                                <th>Grade C</th>
+                                <th>Grade F</th>
+                                <th>Improvement Suggestion</th>
+                            </tr>
+                        {% endif %}
+                    </thead>
+                    <tbody>
+                        {% for item in results %}
+                            <tr>
+                                {% if filter_type == 'degree' %}
+                                    <td>{{ item.degree_id }}</td>
+                                    <td>{{ item.name }}</td>
+                                    <td>{{ item.level }}</td>
+                                {% elif filter_type == 'course' %}
+                                    <td>{{ item.course_id }}</td>
+                                    <td>{{ item.course_number }}</td>
+                                    <td>{{ item.name }}</td>
+                                    <td>{{ 'Yes' if item.is_core else 'No' }}</td>
+                                {% elif filter_type == 'instructor' %}
+                                    <td>{{ item.id }}</td>
+                                    <td>{{ item.name }}</td>
+                                {% elif filter_type == 'section' %}
+                                    <td>{{ item.section_id }}</td>
+                                    <td>{{ item.section_number }}</td>
+                                    <td>{{ item.semester }}</td>
+                                    <td>{{ item.year }}</td>
+                                    <td>{{ item.course_id }}</td>
+                                    <td>{{ item.instructor_id }}</td>
+                                    <td>{{ item.students_enrolled }}</td>
+                                {% elif filter_type == 'goal' %}
+                                    <td>{{ item.goal_id }}</td>
+                                    <td>{{ item.code }}</td>
+                                    <td>{{ item.description }}</td>
+                                    <td>{{ item.degree_id }}</td>
+                                {% elif filter_type == 'evaluation' %}
+                                    <td>{{ item.evaluation_id }}</td>
+                                    <td>{{ item.section_id }}</td>
+                                    <td>{{ item.goal_id }}</td>
+                                    <td>{{ item.evaluation_method }}</td>
+                                    <td>{{ item.grade_A }}</td>
+                                    <td>{{ item.grade_B }}</td>
+                                    <td>{{ item.grade_C }}</td>
+                                    <td>{{ item.grade_F }}</td>
+                                    <td>{{ item.improvement_suggestion }}</td>
+                                {% endif %}
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <p>No results found for the selected criteria.</p>
+            {% endif %}
+
+            <br>
+            <a href="{{ url_for('index') }}" class="button">Back to Home</a>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; 2024 CS5330 Group 6 (Devon Coates, Jaden Nathaniel, Myles Miller, Chris Hirschbrich)</p>
+    </footer>
+</body>
+</html>

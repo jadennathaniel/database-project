@@ -691,3 +691,27 @@ def associate_course_degree(course_id, degree_ids):
     finally:
         cursor.close()
         conn.close()
+
+# In models.py
+def get_all_sections():
+    # This should query the database to return all sections.
+    # Return them as a list of dicts or objects that have 'section_number' and 'semester' fields.
+    # Example pseudo-code:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    results = cursor.session.execute("SELECT section_id, section_number, semester FROM sections").fetchall()
+    cursor.close()
+    conn.close()
+
+    return [{'section_id': r[0], 'section_number': r[1], 'semester': r[2]} for r in results]
+
+def get_all_evaluations():
+    # Similarly for evaluations:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    results = cursor.session.execute("SELECT evaluation_id, evaluation_method FROM evaluations").fetchall()
+    cursor.close()
+    conn.close()
+    return [{'evaluation_id': r[0], 'evaluation_method': r[1]} for r in results]

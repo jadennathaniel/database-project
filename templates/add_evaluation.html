@@ -1,77 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <title>Add Evaluation</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-        select, input, textarea {
-            width: 100%;
-            padding: 8px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        .grades-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        .status {
-            margin: 15px 0;
-            padding: 10px;
-            background-color: #f5f5f5;
-            border-radius: 4px;
-        }
-        .checkbox-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 12px;
-        }
-
-        .checkbox-wrapper {
-            display: flex;
-            align-items: center;
-            padding: 8px;
-            background: white;
-            border-radius: 6px;
-            transition: all 0.2s;
-            border: 1px solid #e2e8f0;
-        }
-
-        .checkbox-wrapper:hover {
-            background: #edf2f7;
-        }
-
-        .checkbox-wrapper input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            margin-right: 10px;
-            accent-color: #4299e1;
-            cursor: pointer;
-        }
-
-        .checkbox-wrapper label {
-            font-size: 0.9rem;
-            color: #4a5568;
-            cursor: pointer;
-            flex: 1;
-        }
-    </style>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+    <meta charset="UTF-8" />
 </head>
 <body>
     <div class="nav">
@@ -88,17 +20,25 @@
         {% endif %}
     {% endwith %}
 
-    <form method="get" class="filter-form">
+    <!-- 
+        Single form that:
+        1. Requests Semester, Year, Instructor ID
+        2. Requests Course, Section, and Goal
+        3. Shows evaluation fields once all above are selected
+    -->
+    <form method="POST" action="{{ url_for('add_evaluation_route') }}" class="filter-form">
+        <!-- Semester -->
         <div class="form-group">
             <label for="semester">Semester:</label>
             <select name="semester" id="semester" required>
                 <option value="">Select Semester</option>
-                <option value="Spring" {% if semester == 'Spring' %}selected{% endif %}>Spring</option>
-                <option value="Summer" {% if semester == 'Summer' %}selected{% endif %}>Summer</option>
-                <option value="Fall" {% if semester == 'Fall' %}selected{% endif %}>Fall</option>
+                <option value="Spring">Spring</option>
+                <option value="Summer">Summer</option>
+                <option value="Fall">Fall</option>
             </select>
         </div>
 
+        <!-- Year -->
         <div class="form-group">
             <label for="year">Year:</label>
             <input type="number" 
@@ -107,151 +47,146 @@
                    min="2000"
                    max="2099"
                    value="2024"
-                   title="Please enter a valid year between 2000-2099"
                    required>
         </div>
 
+        <!-- Instructor ID -->
         <div class="form-group">
             <label for="instructor_id">Instructor ID:</label>
             <input type="text" 
                    id="instructor_id" 
                    name="instructor_id"
-                   value="{{ instructor_id or '' }}"
                    pattern="[0-9]{8}"
-                   title="Please enter your 8-digit instructor ID"
+                   title="Enter 8-digit Instructor ID"
                    required>
         </div>
 
-        <button type="submit" class="button submit">Show Sections</button>
-    </form>
-
-    {% if sections %}
-    <div class="form-group">
-        <label for="section_id">Section:</label>
-        <select name="section_id" id="section_id" required>
-            <option value="">Select Section</option>
-            {% for section in sections %}
-            <option value="{{ section.section_id }}" 
-                    {% if section_id and section_id|string == section.section_id|string %}selected{% endif %}>
-                {{ section.course_number }} - Section {{ section.section_number }}
-            </option>
-            {% endfor %}
-        </select>
-    </div>
-    {% endif %}
-
-    {% if goals %}
-    {% for goal in goals %}
-    <form method="post" class="goal-section">
-        <input type="hidden" name="section_id" value="{{ section_id }}">
-        <input type="hidden" name="goal_id" value="{{ goal.goal_id }}">
-        
-        <div class="status-indicator {{ goal_statuses.get(goal.goal_id, {}).get('status', 'not_entered') }}">
-            <h3>Goal: {{ goal.code }} - {{ goal.description }}</h3>
-            <p>Status: {{ goal_statuses.get(goal.goal_id, {}).get('status', 'not_entered')|title }}</p>
-            <p>Completed Fields: {{ goal_statuses.get(goal.goal_id, {}).get('completed_fields', 0) }} / 
-               {{ goal_statuses.get(goal.goal_id, {}).get('total_fields', 5) }}</p>
-        </div>
-
+        <!-- Course Dropdown -->
         <div class="form-group">
-            <label for="evaluation_method_{{ goal.goal_id }}">Evaluation Method:</label>
-            <select name="evaluation_method" id="evaluation_method_{{ goal.goal_id }}" required>
-                <option value="">Select Method</option>
-                {% set methods = ['Homework', 'Project', 'Quiz', 'Oral Presentation', 'Report', 'Mid-term', 'Final Exam', 'Other'] %}
-                {% for method in methods %}
-                    <option value="{{ method }}" 
-                            {% if existing_data.get(goal.goal_id, {}).get('evaluation_method') == method %}selected{% endif %}>
-                        {{ method }}
-                    </option>
+            <label for="course_id">Course:</label>
+            <select name="course_id" id="course_id" required>
+                <option value="">Select a Course</option>
+                {% for course in courses %}
+                <option value="{{ course.course_id }}">{{ course.course_number }} - {{ course.name }}</option>
                 {% endfor %}
             </select>
         </div>
 
-        <div class="grades-grid">
-            <div class="form-group">
-                <label for="num_a_{{ goal.goal_id }}">Grade A:</label>
-                <input type="number" 
-                       id="num_a_{{ goal.goal_id }}" 
-                       name="num_a" 
-                       min="0" 
-                       value="{{ existing_data.get(goal.goal_id, {}).get('grade_A', 0) }}">
-            </div>
-            <div class="form-group">
-                <label for="num_b_{{ goal.goal_id }}">Grade B:</label>
-                <input type="number" 
-                       id="num_b_{{ goal.goal_id }}" 
-                       name="num_b" 
-                       min="0" 
-                       value="{{ existing_data.get(goal.goal_id, {}).get('grade_B', 0) }}">
-            </div>
-            <div class="form-group">
-                <label for="num_c_{{ goal.goal_id }}">Grade C:</label>
-                <input type="number" 
-                       id="num_c_{{ goal.goal_id }}" 
-                       name="num_c" 
-                       min="0" 
-                       value="{{ existing_data.get(goal.goal_id, {}).get('grade_C', 0) }}">
-            </div>
-            <div class="form-group">
-                <label for="num_f_{{ goal.goal_id }}">Grade F:</label>
-                <input type="number" 
-                       id="num_f_{{ goal.goal_id }}" 
-                       name="num_f" 
-                       min="0" 
-                       value="{{ existing_data.get(goal.goal_id, {}).get('grade_F', 0) }}">
-            </div>
-        </div>
-
+        <!-- Section Dropdown -->
         <div class="form-group">
-            <label for="improvement_{{ goal.goal_id }}">Suggested Improvements:</label>
-            <textarea id="improvement_{{ goal.goal_id }}" 
-                      name="improvement" 
-                      rows="4" 
-                      placeholder="Optional: Enter suggestions for improvement">{{ existing_data.get(goal.goal_id, {}).get('improvement_suggestion', '') }}</textarea>
-        </div>
-
-        <div class="form-group">
-            <label>Duplicate this evaluation to:</label>
-            <div class="checkbox-grid">
-                {% for degree in other_degrees %}
-                <div class="checkbox-wrapper">
-                    <input type="checkbox" 
-                           name="duplicate_to_degrees" 
-                           value="{{ degree.degree_id }}"
-                           id="dup_{{ degree.degree_id }}">
-                    <label for="dup_{{ degree.degree_id }}">{{ degree.name }} ({{ degree.level }})</label>
-                </div>
+            <label for="section_id">Section:</label>
+            <select name="section_id" id="section_id" required>
+                <option value="">Select a Section</option>
+                {% for section in sections %}
+                <option value="{{ section.section_id }}"
+                        data-course-id="{{ section.course_id }}"
+                        data-instructor-id="{{ section.instructor_id }}"
+                        data-semester="{{ section.semester }}"
+                        data-year="{{ section.year }}">
+                    {{ section.course_number }} - Section {{ section.section_number }} ({{ section.semester }} {{ section.year }})
+                </option>
                 {% endfor %}
-            </div>
+            </select>
         </div>
 
-        <div class="button-group">
-            <button type="submit" name="save_as_draft" value="true" class="button save-draft">
-                Save as Draft
-            </button>
-            <button type="submit" class="button submit">
-                Complete Evaluation
-            </button>
+        <!-- Goal Dropdown -->
+        <div class="form-group">
+            <label for="goal_id">Goal:</label>
+            <select name="goal_id" id="goal_id" required>
+                <option value="">Select a Goal</option>
+                {% for goal in goals %}
+                <option value="{{ goal.goal_id }}"
+                        data-course-id="{{ goal.course_id|default(0) }}">
+                    {{ goal.code }} - {{ goal.description }} ({{ goal.degree_name }} - {{ goal.degree_level }})
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Evaluation Fields (hidden until a goal is selected) -->
+        <div id="evaluation-fields" style="display:none;">
+            <h2>Evaluation Details</h2>
+            
+            <div class="form-group">
+                <label for="evaluation_method">Evaluation Method:</label>
+                <select name="evaluation_method" id="evaluation_method" required>
+                    <option value="">Select Method</option>
+                    {% set methods = ['Homework', 'Project', 'Quiz', 'Oral Presentation', 'Report', 'Mid-term', 'Final Exam', 'Other'] %}
+                    {% for method in methods %}
+                    <option value="{{ method }}">{{ method }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="grades-grid">
+                <div class="form-group">
+                    <label for="num_a">Grade A:</label>
+                    <input type="number" id="num_a" name="num_a" min="0" value="0">
+                </div>
+                <div class="form-group">
+                    <label for="num_b">Grade B:</label>
+                    <input type="number" id="num_b" name="num_b" min="0" value="0">
+                </div>
+                <div class="form-group">
+                    <label for="num_c">Grade C:</label>
+                    <input type="number" id="num_c" name="num_c" min="0" value="0">
+                </div>
+                <div class="form-group">
+                    <label for="num_f">Grade F:</label>
+                    <input type="number" id="num_f" name="num_f" min="0" value="0">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="improvement">Suggested Improvements:</label>
+                <textarea id="improvement" name="improvement" rows="4" placeholder="Optional"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Duplicate this evaluation to:</label>
+                <div class="checkbox-grid">
+                    {% for degree in other_degrees %}
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" name="duplicate_to_degrees" value="{{ degree.degree_id }}" id="dup_{{ degree.degree_id }}">
+                        <label for="dup_{{ degree.degree_id }}">{{ degree.name }} ({{ degree.level }})</label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button type="submit" class="button submit">Complete Evaluation</button>
+            </div>
         </div>
     </form>
-    {% endfor %}
-    {% endif %}
 
     <script>
-    document.getElementById('section_id').addEventListener('change', function(e) {
-        e.preventDefault();
-        const currentUrl = new URL(window.location.href);
-        const params = currentUrl.searchParams;
-        
-        const semester = document.querySelector('select[name="semester"]').value;
-        const instructorId = document.querySelector('input[name="instructor_id"]').value;
-        
-        params.set('section_id', this.value);
-        params.set('semester', semester);
-        params.set('instructor_id', instructorId);
-        
-        window.location.href = `${currentUrl.pathname}?${params.toString()}`;
-    });
+        const semesterEl = document.getElementById('semester');
+        const yearEl = document.getElementById('year');
+        const instructorIdEl = document.getElementById('instructor_id');
+        const courseEl = document.getElementById('course_id');
+        const sectionEl = document.getElementById('section_id');
+        const goalEl = document.getElementById('goal_id');
+        const evaluationFields = document.getElementById('evaluation-fields');
+
+        // Initially hide evaluation fields
+        evaluationFields.style.display = 'none';
+
+        // Show evaluation fields once all filters are chosen
+        function checkIfReady() {
+            if (semesterEl.value && yearEl.value && instructorIdEl.value &&
+                courseEl.value && sectionEl.value && goalEl.value) {
+                evaluationFields.style.display = 'block';
+            } else {
+                evaluationFields.style.display = 'none';
+            }
+        }
+
+        // Attach event listeners to check readiness whenever a field changes
+        [semesterEl, yearEl, instructorIdEl, courseEl, sectionEl, goalEl].forEach(el => {
+            el.addEventListener('change', checkIfReady);
+            el.addEventListener('input', checkIfReady);
+        });
     </script>
 </body>
 </html>

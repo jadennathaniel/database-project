@@ -43,17 +43,17 @@
             <option value="Fall" {% if semester == 'Fall' %}selected{% endif %}>Fall</option>
         </select>
         
-        <input type="number" name="year" value="{{ year or '' }}" placeholder="Year" required>
-
-        <!-- New field for the percentage input -->
-        <input type="number" name="percentage" value="{{ percentage or '' }}" placeholder="Percentage" min="0" max="100">
+        <input type="number" 
+               name="year" 
+               value="{{ year or '' }}"
+               placeholder="Year"
+               required>
                
-        <button type="submit">Filter Sections</button>
+        <button type="submit">Show Status</button>
     </form>
 
-    {% if filtered_sections is defined and filtered_sections %}
-        <h2>Sections Meeting the Criteria (Non-F ≥ {{ percentage }}%)</h2>
-        {% for section in filtered_sections %}
+    {% if sections %}
+        {% for section in sections %}
             <div class="status-card {{ section.status }}">
                 <h3>{{ section.course_number }} - Section {{ section.section_number }}</h3>
                 <p>{{ section.course_name }}</p>
@@ -67,13 +67,11 @@
                 {% if section.has_improvement > 0 %}
                     <p>Has improvement suggestions for {{ section.has_improvement }} goals</p>
                 {% endif %}
-                <!-- Show the calculated percentage -->
-                <p>Non-F Percentage: {{ section.non_f_percentage }}%</p>
             </div>
         {% endfor %}
     {% else %}
-        {% if semester and year and percentage %}
-            <p>No sections found that meet the criteria for {{ semester }} {{ year }} at {{ percentage }}%.</p>
+        {% if semester and year %}
+            <p>No sections found for {{ semester }} {{ year }}</p>
         {% endif %}
     {% endif %}
 </body>

@@ -70,6 +70,26 @@
             cursor: pointer;
             flex: 1;
         }
+        .status-indicator {
+    padding: 15px;
+    border-radius: 6px;
+    margin: 15px 0;
+}
+
+.completed {
+    background-color: #c6f6d5;
+    border-left: 4px solid #38a169;
+}
+
+.not_complete {
+    background-color: #fed7d7;
+    border-left: 4px solid #e53e3e;
+}
+
+.status-text {
+    font-weight: 600;
+    margin-bottom: 8px;
+}
     </style>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
 </head>
@@ -146,9 +166,11 @@
         <input type="hidden" name="section_id" value="{{ section_id }}">
         <input type="hidden" name="goal_id" value="{{ goal.goal_id }}">
         
-        <div class="status-indicator {{ goal_statuses.get(goal.goal_id, {}).get('status', 'not_entered') }}">
+        <div class="status-indicator {{ 'completed' if goal_statuses.get(goal.goal_id, {}).get('is_complete') else 'not_complete' }}">
             <h3>Goal: {{ goal.code }} - {{ goal.description }}</h3>
-            <p>Status: {{ goal_statuses.get(goal.goal_id, {}).get('status', 'not_entered')|title }}</p>
+            <p class="status-text">
+                Status: {{ 'Completed' if goal_statuses.get(goal.goal_id, {}).get('is_complete') else 'Not Complete' }}
+            </p>
             <p>Completed Fields: {{ goal_statuses.get(goal.goal_id, {}).get('completed_fields', 0) }} / 
                {{ goal_statuses.get(goal.goal_id, {}).get('total_fields', 5) }}</p>
         </div>
@@ -207,7 +229,7 @@
             <textarea id="improvement_{{ goal.goal_id }}" 
                       name="improvement" 
                       rows="4" 
-                      placeholder="Optional: Enter suggestions for improvement">{{ existing_data.get(goal.goal_id, {}).get('improvement_suggestion', '') }}</textarea>
+                      placeholder="Optional: Enter suggestions for improvement">{{ existing_data.get(goal.goal_id, {}).get('improvement_notes', '') }}</textarea>
         </div>
 
         <div class="form-group">

@@ -1,7 +1,7 @@
 from datetime import datetime
 from flask import jsonify, render_template, request, redirect, url_for, flash
 from app import app
-from models import add_degree, add_course, add_instructor, add_or_update_evaluation, add_section, add_goal, associate_course_degree, associate_course_goal, duplicate_evaluation, get_all_evaluations, get_all_goals, get_all_sections, get_course_degrees, get_courses_by_goals, get_degree, get_degree_courses, get_degree_goals, get_degree_sections, get_degrees, get_all_courses, get_all_instructors, get_evaluation_status, get_existing_evaluation, get_goal_completion_status, get_instructor_sections, get_section_evaluations, get_section_goals, get_instructor_sections_single
+from models import add_degree, add_course, add_instructor, add_or_update_evaluation, add_section, add_goal, associate_course_degree, associate_course_goal, duplicate_evaluation, get_all_evaluations, get_all_goals, get_all_sections, get_course_degrees, get_courses_by_goals, get_degree, get_degree_courses, get_degree_goals, get_degree_sections, get_degrees, get_all_courses, get_all_instructors, get_evaluation_status, get_existing_evaluation, get_goal_completion_status, get_instructor_sections, get_section_evaluations, get_section_goals, get_instructor_sections_single, get_sections_evaluation_status
 
 @app.route('/')
 def index():
@@ -204,7 +204,7 @@ def add_evaluation_route():
             other_degrees = get_degrees()
 
             if semester and instructor_id:
-                sections = get_instructor_sections(instructor_id, semester, year)
+                sections = get_instructor_sections_single(instructor_id, semester, year)
 
             if section_id:
                 goals = get_section_goals(section_id)
@@ -574,3 +574,21 @@ def goal_courses_route(degree_id):
         print(f"Error: {str(e)}")
         flash(str(e), 'error')
         return redirect(url_for('index'))
+    
+# routes.py
+@app.route('/evaluation_status', methods=['GET'])
+def evaluation_status_route():
+    semester = request.args.get('semester')
+    year = request.args.get('year')
+    
+    if semester and year:
+        try:
+            sections = get_sections_evaluation_status(semester, year)
+            return render_template('evaluation_status.html',
+                                sections=sections,
+                                semester=semester,
+                                year=year)
+        except Exception as e:
+            flash(str(e), 'error')
+            
+    return render_template('evaluation_status.html')

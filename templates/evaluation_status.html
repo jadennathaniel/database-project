@@ -1,0 +1,78 @@
+<!-- templates/evaluation_status.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Evaluation Status</title>
+    <style>
+        .status-card {
+            background: white;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border-left: 4px solid;
+        }
+        .not_entered {
+            border-color: #e53e3e;
+            background-color: #fff5f5;
+        }
+        .partially_entered {
+            border-color: #d69e2e;
+            background-color: #fffff0;
+        }
+        .completed {
+            border-color: #38a169;
+            background-color: #f0fff4;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <h1>Evaluation Status</h1>
+    
+    <form method="get" class="filter-form">
+        <select name="semester" required>
+            <option value="">Select Semester</option>
+            <option value="Spring" {% if semester == 'Spring' %}selected{% endif %}>Spring</option>
+            <option value="Summer" {% if semester == 'Summer' %}selected{% endif %}>Summer</option>
+            <option value="Fall" {% if semester == 'Fall' %}selected{% endif %}>Fall</option>
+        </select>
+        
+        <input type="number" 
+               name="year" 
+               value="{{ year or '' }}"
+               placeholder="Year"
+               required>
+               
+        <button type="submit">Show Status</button>
+    </form>
+
+    {% if sections %}
+        {% for section in sections %}
+            <div class="status-card {{ section.status }}">
+                <h3>{{ section.course_number }} - Section {{ section.section_number }}</h3>
+                <p>{{ section.course_name }}</p>
+                <p>Instructor: {{ section.instructor_name }}</p>
+                <p>Status: 
+                    <span class="status-badge">
+                        {{ section.status|replace('_', ' ')|title }}
+                    </span>
+                </p>
+                <p>Goals Evaluated: {{ section.evaluated_goals }}/{{ section.total_goals }}</p>
+                {% if section.has_improvement > 0 %}
+                    <p>Has improvement suggestions for {{ section.has_improvement }} goals</p>
+                {% endif %}
+            </div>
+        {% endfor %}
+    {% else %}
+        {% if semester and year %}
+            <p>No sections found for {{ semester }} {{ year }}</p>
+        {% endif %}
+    {% endif %}
+</body>
+</html>

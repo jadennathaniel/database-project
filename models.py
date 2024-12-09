@@ -903,3 +903,40 @@ def get_instructor_sections_single(instructor_id, semester, year):
     finally:
         cursor.close()
         conn.close()
+
+# models.py
+def get_sections_evaluation_status(semester, year):
+    """Get evaluation status for all sections in a semester"""
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute('''
+            SELECT 
+                s.section_id,
+                s.section_number,
+                c.course_number,
+                c.name as course_name,
+                i.name as instructor_name,
+                e.is_complete,
+                CASE
+                    WHEN e.is_complete IS NULL THEN 'not_entered'
+                    WHEN e.is_complete = 'completed' THEN 'completed'
+                    ELSE 'partially_completed'
+                END as status,
+                CASE 
+                    WHEN e.improvement_notes IS NOT NULL 
+                    AND e.improvement_notes != '' 
+                    THEN 1 
+                    ELSE 0 
+                END as has_improvement
+            FROM Sections s
+            JOIN Courses c ON s.course_id = c.course_id
+            JOIN Instructors i ON s.instructor_id = i.instructor_id
+            LEFT JOIN Evaluations e ON s.section_id = e.section_id
+            WHERE s.semester = %s AND s.year = %s
+            ORDER BY c.course_number, s.section_number
+        ''', (semester, year))
+        return cursor.fetchall()
+    finally:
+        cursor.close()
+        conn.close()

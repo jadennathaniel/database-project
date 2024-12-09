@@ -191,16 +191,40 @@ def associate_course_goal_route():
 @app.route('/add_evaluation', methods=['GET', 'POST'])
 def add_evaluation_route():
     if request.method == 'GET':
-        courses = get_all_courses()
-        sections = get_all_sections()
-        goals = get_all_goals()
-        other_degrees = get_degrees()
+        semester = request.args.get('semester')
+        instructor_id = request.args.get('instructor_id')
+        section_id = request.args.get('section_id')
+        year = request.args.get('year')
+
+        sections = []
+        goals = []
+        goal_statuses = {}
+        existing_data = {}
+        other_degrees = get_degrees()  # Fetch all degrees for duplication
+
+        if semester and instructor_id:
+            sections = get_instructor_sections(instructor_id, semester, year)
+
+        if section_id:
+            goals = get_section_goals(section_id)
+            for goal in goals:
+                status = get_goal_completion_status(section_id, goal['goal_id'])
+                goal_statuses[goal['goal_id']] = status
+
+                eval_data = get_existing_evaluation(section_id, goal['goal_id'])
+                if eval_data:
+                    existing_data[goal['goal_id']] = eval_data
+
         return render_template(
             'add_evaluation.html',
-            courses=courses,
             sections=sections,
             goals=goals,
-            other_degrees=other_degrees
+            goal_statuses=goal_statuses,
+            existing_data=existing_data,
+            semester=semester,
+            instructor_id=instructor_id,
+            section_id=section_id,
+            other_degrees=other_degrees  # Pass the degrees to the template
         )
 
     elif request.method == 'POST':

@@ -350,31 +350,27 @@ def get_section_goals(section_id):
         ''', (section_id,))
         
         goals = cursor.fetchall()
-        print(f"Found {len(goals)} goals")  # Debug log
+        print(f"Found {len(goals)} goals")
         return goals
         
     except Exception as e:
-        print(f"Error getting goals: {e}")  # Debug log
+        print(f"Error getting goals: {e}")
         raise
     finally:
         cursor.close()
         conn.close()
 
 def add_or_update_evaluation(section_id, goal_id, evaluation_method, 
-                           num_a, num_b, num_c, num_f, improvement_notes=None):
+                             num_a, num_b, num_c, num_f, improvement_notes=None):
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Determine completion status
-    filled_fields = sum(1 for field in [evaluation_method, num_a, num_b, num_c, num_f] if field)
-    if filled_fields == 0:
-        completion_status = 'not_entered'
-    elif filled_fields < 5:
-        completion_status = 'partially_completed'
-    else:
-        completion_status = 'completed'
-        
+    if not section_id or not goal_id or not evaluation_method:
+        raise ValueError("Section ID, Goal ID, and Evaluation Method are required.")
+    
     try:
+        print(f"Saving evaluation: Section {section_id}, Goal {goal_id}, Method {evaluation_method}")
+        
         cursor.execute('''
             SELECT evaluation_id FROM Evaluations
             WHERE section_id = %s AND goal_id = %s
@@ -393,7 +389,7 @@ def add_or_update_evaluation(section_id, goal_id, evaluation_method,
                     is_complete = %s
                 WHERE section_id = %s AND goal_id = %s
             ''', (evaluation_method, num_a, num_b, num_c, num_f,
-                  improvement_notes, completion_status, section_id, goal_id))
+                  improvement_notes, True, section_id, goal_id))
         else:
             cursor.execute('''
                 INSERT INTO Evaluations (
@@ -403,11 +399,12 @@ def add_or_update_evaluation(section_id, goal_id, evaluation_method,
                 ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             ''', (section_id, goal_id, evaluation_method,
                   num_a, num_b, num_c, num_f,
-                  improvement_notes, completion_status))
+                  improvement_notes, True))
         
         conn.commit()
     except Exception as e:
         conn.rollback()
+        print(f"Error saving evaluation: {e}")
         raise e
     finally:
         cursor.close()
@@ -502,8 +499,7 @@ def save_evaluation(section_id, goal_id, data):
         cursor.close()
         conn.close()
 
-def duplicate_evaluation(from_goal_id, to_goal_id, section_id):
-    """Copy evaluation from one goal to another"""
+def duplicate_evaluation(from_goal_id, to_degree_id, section_id):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     try:
@@ -517,10 +513,21 @@ def duplicate_evaluation(from_goal_id, to_goal_id, section_id):
         source_eval = cursor.fetchone()
         if not source_eval:
             raise ValueError("Source evaluation not found")
-            
+        
+        # Find the new goal ID for the target degree
+        cursor.execute('''
+            SELECT goal_id
+            FROM Goals
+            WHERE degree_id = %s
+            AND code = (SELECT code FROM Goals WHERE goal_id = %s)
+        ''', (to_degree_id, from_goal_id))
+        target_goal = cursor.fetchone()
+        if not target_goal:
+            raise ValueError(f"No goal found for degree ID {to_degree_id}")
+        
         add_or_update_evaluation(
             section_id=section_id,
-            goal_id=to_goal_id,
+            goal_id=target_goal['goal_id'],
             evaluation_method=source_eval['evaluation_method'],
             num_a=source_eval['grade_A'],
             num_b=source_eval['grade_B'],
@@ -528,7 +535,6 @@ def duplicate_evaluation(from_goal_id, to_goal_id, section_id):
             num_f=source_eval['grade_F'],
             improvement_notes=source_eval['improvement_notes']
         )
-        
     except Exception as e:
         conn.rollback()
         raise e

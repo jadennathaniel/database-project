@@ -210,6 +210,22 @@
                       placeholder="Optional: Enter suggestions for improvement">{{ existing_data.get(goal.goal_id, {}).get('improvement_suggestion', '') }}</textarea>
         </div>
 
+        <div class="form-group">
+            <label>Duplicate this evaluation to:</label>
+            <div class="checkbox-grid">
+                {% for degree in associated_degrees %}
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" 
+                           name="duplicate_to_degrees" 
+                           value="{{ degree.degree_id }}"
+                           id="dup_{{ degree.degree_id }}">
+                    <label for="dup_{{ degree.degree_id }}">{{ degree.name }} ({{ degree.level }})</label>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        
+
         <!-- {% if goals|length > 1 %}
         <div class="form-group">
             <label>Duplicate this evaluation to:</label>
@@ -247,7 +263,6 @@
         const currentUrl = new URL(window.location.href);
         const params = currentUrl.searchParams;
         
-        // Preserve existing parameters
         const semester = document.querySelector('select[name="semester"]').value;
         const instructorId = document.querySelector('input[name="instructor_id"]').value;
         
@@ -255,7 +270,6 @@
         params.set('semester', semester);
         params.set('instructor_id', instructorId);
         
-        // Update URL and reload page
         window.location.href = `${currentUrl.pathname}?${params.toString()}`;
     });
 

@@ -424,11 +424,29 @@ def get_section_goals(section_id):
         conn.close()
 
 def add_or_update_evaluation(section_id, goal_id, evaluation_method, 
-                           num_a, num_b, num_c, num_f, improvement_notes=None, is_complete=None):
+                           num_a, num_b, num_c, num_f, 
+                           improvement_notes=None, is_complete=None):
     conn = get_db_connection()
     cursor = conn.cursor(buffered=True)
     
     try:
+        # Check if all required fields are filled
+        required_fields = [
+            evaluation_method,
+            num_a is not None,
+            num_b is not None,
+            num_c is not None,
+            num_f is not None
+        ]
+        
+        # Set completion status
+        if not any(required_fields):
+            is_complete = 'not_entered'
+        elif all(required_fields):
+            is_complete = 'completed'
+        else:
+            is_complete = 'partially_completed'
+            
         cursor.execute('''
             INSERT INTO Evaluations (
                 section_id, goal_id, evaluation_method,
@@ -446,10 +464,14 @@ def add_or_update_evaluation(section_id, goal_id, evaluation_method,
         ''', (
             section_id, goal_id, evaluation_method,
             num_a, num_b, num_c, num_f,
-            improvement_notes,
-            'partially_completed' if any([num_a, num_b, num_c, num_f, evaluation_method]) else 'not_entered'
+            improvement_notes, is_complete
         ))
+        
         conn.commit()
+        
+    except Exception as e:
+        conn.rollback()
+        raise e
     finally:
         cursor.close()
         conn.close()

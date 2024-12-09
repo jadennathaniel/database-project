@@ -887,3 +887,19 @@ def get_courses_by_goals(goal_ids):
     finally:
         cursor.close()
         conn.close()
+def get_instructor_sections(instructor_id, semester, year):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute('''
+            SELECT s.*, c.course_number, c.name as course_name
+            FROM Sections s
+            JOIN Courses c ON s.course_id = c.course_id
+            WHERE s.instructor_id = %s 
+            AND s.semester = %s
+            AND s.year = %s
+        ''', (instructor_id, semester, year))
+        return cursor.fetchall()
+    finally:
+        cursor.close()
+        conn.close()

@@ -812,3 +812,41 @@ def get_degree_sections(degree_id, from_semester, from_year, to_semester, to_yea
     finally:
         cursor.close()
         conn.close()
+
+# models.py
+def get_degree_goals(degree_id):
+    """Get all goals for a degree"""
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute('''
+            SELECT g.*
+            FROM Goals g
+            WHERE g.degree_id = %s
+            ORDER BY g.code
+        ''', (degree_id,))
+        return cursor.fetchall()
+    finally:
+        cursor.close()
+        conn.close()
+
+# models.py
+def get_courses_by_goals(goal_ids):
+    """Get courses associated with specified goals"""
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        placeholders = ','.join(['%s'] * len(goal_ids))
+        cursor.execute(f'''
+            SELECT DISTINCT c.*, g.goal_id, g.code as goal_code, 
+                   g.description as goal_description
+            FROM Courses c
+            JOIN CourseGoals cg ON c.course_id = cg.course_id
+            JOIN Goals g ON cg.goal_id = g.goal_id
+            WHERE g.goal_id IN ({placeholders})
+            ORDER BY g.code, c.course_number
+        ''', tuple(goal_ids))
+        return cursor.fetchall()
+    finally:
+        cursor.close()
+        conn.close()

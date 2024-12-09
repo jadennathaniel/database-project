@@ -1,0 +1,62 @@
+<!-- templates/degree_goals.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Degree Goals</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f7fa;
+        }
+        .nav {
+            margin-bottom: 30px;
+        }
+        .nav a {
+            text-decoration: none;
+            color: #2c5282;
+            padding: 8px 16px;
+            border-radius: 4px;
+            background-color: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transition: all 0.2s;
+        }
+        .goal-card {
+            background: white;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .goal-code {
+            font-weight: 600;
+            color: #2c5282;
+            margin-bottom: 8px;
+        }
+        .goal-description {
+            color: #4a5568;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <a href="{{ url_for('index') }}">← Back to Home</a>
+    </div>
+
+    <h1>Goals for {{ degree.name }} ({{ degree.level }})</h1>
+
+    {% if goals %}
+        {% for goal in goals %}
+            <div class="goal-card">
+                <div class="goal-code">{{ goal.code }}</div>
+                <div class="goal-description">{{ goal.description }}</div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No goals found for this degree.</p>
+    {% endif %}
+</body>
+</html>

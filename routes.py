@@ -1,7 +1,7 @@
 from datetime import datetime
 from flask import jsonify, render_template, request, redirect, url_for, flash
 from app import app
-from models import add_degree, add_course, add_instructor, add_or_update_evaluation, add_section, add_goal, associate_course_degree, associate_course_goal, duplicate_evaluation, get_all_evaluations, get_all_goals, get_all_sections, get_course_degrees, get_degree, get_degree_courses, get_degree_sections, get_degrees, get_all_courses, get_all_instructors, get_evaluation_status, get_existing_evaluation, get_goal_completion_status, get_instructor_sections, get_section_evaluations, get_section_goals
+from models import add_degree, add_course, add_instructor, add_or_update_evaluation, add_section, add_goal, associate_course_degree, associate_course_goal, duplicate_evaluation, get_all_evaluations, get_all_goals, get_all_sections, get_course_degrees, get_courses_by_goals, get_degree, get_degree_courses, get_degree_goals, get_degree_sections, get_degrees, get_all_courses, get_all_instructors, get_evaluation_status, get_existing_evaluation, get_goal_completion_status, get_instructor_sections, get_section_evaluations, get_section_goals
 
 @app.route('/')
 def index():
@@ -491,5 +491,55 @@ def degree_sections_route(degree_id):
 
     except Exception as e:
         print(f"Error in degree_sections_route: {str(e)}")  # Debug log
+        flash(str(e), 'error')
+        return redirect(url_for('index'))
+    
+# routes.py
+@app.route('/degree_goals/<int:degree_id>', methods=['GET'])
+def degree_goals_route(degree_id):
+    try:
+        degree = get_degree(degree_id)
+        if not degree:
+            flash('Degree not found', 'error')
+            return redirect(url_for('index'))
+            
+        goals = get_degree_goals(degree_id)
+        return render_template('degree_goals.html',
+                             goals=goals,
+                             degree=degree)
+    except Exception as e:
+        print(f"Error: {str(e)}")
+        flash(str(e), 'error')
+        return redirect(url_for('index'))
+    
+# routes.py
+@app.route('/goal_courses/<int:degree_id>', methods=['GET', 'POST'])
+def goal_courses_route(degree_id):
+    try:
+        degree = get_degree(degree_id)
+        if not degree:
+            flash('Degree not found', 'error')
+            return redirect(url_for('index'))
+            
+        goals = get_degree_goals(degree_id)
+        
+        if request.method == 'POST':
+            selected_goals = request.form.getlist('goal_ids')
+            if not selected_goals:
+                flash('Please select at least one goal', 'error')
+            else:
+                goal_courses = get_courses_by_goals(selected_goals)
+                return render_template('goal_courses.html',
+                                     degree=degree,
+                                     goals=goals,
+                                     selected_goals=selected_goals,
+                                     goal_courses=goal_courses)
+                
+        return render_template('goal_courses.html',
+                             degree=degree,
+                             goals=goals)
+                             
+    except Exception as e:
+        print(f"Error: {str(e)}")
         flash(str(e), 'error')
         return redirect(url_for('index'))

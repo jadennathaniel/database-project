@@ -102,6 +102,16 @@
             <br><br>
             <button type="submit">Search</button>
         </form>
+        <!-- index.html - Update degree query links -->
+        <div class="nav-section">
+            <h2>Degree Queries</h2>
+            <div class="button-grid">
+                <a href="{{ url_for('select_degree_route', query_type='courses') }}" class="button query-button">View Courses by Degree</a>
+                <a href="{{ url_for('select_degree_route', query_type='sections') }}" class="button query-button">View Sections by Degree</a>
+                <a href="{{ url_for('select_degree_route', query_type='goals') }}" class="button query-button">View Goals by Degree</a>
+                <a href="{{ url_for('select_degree_route', query_type='goal_courses') }}" class="button query-button">View Courses by Goals</a>
+            </div>
+        </div>
     </section>
     <script>
     document.getElementById('filter-type').addEventListener('change', function() {

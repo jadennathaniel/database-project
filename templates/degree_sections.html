@@ -1,0 +1,161 @@
+<!-- templates/degree_sections.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Degree Sections</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f7fa;
+        }
+        .nav {
+            margin-bottom: 30px;
+        }
+        .filter-form {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        select, input {
+            padding: 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            margin-right: 10px;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        th {
+            background-color: #f7fafc;
+            font-weight: 600;
+            color: #4a5568;
+        }
+        tr:hover {
+            background-color: #f7fafc;
+        }
+        .button {
+            background-color: #4299e1;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .date-range {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-bottom: 15px;
+    }
+    .range-start, .range-end {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .range-start label, .range-end label {
+        font-weight: 500;
+        min-width: 50px;
+    }
+    select, input[type="number"] {
+        padding: 8px;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+    }
+    select {
+        min-width: 100px;
+    }
+    input[type="number"] {
+        width: 100px;
+    }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <a href="{{ url_for('index') }}">← Back to Home</a>
+    </div>
+
+    <h1>Sections for {{ degree.name }} ({{ degree.level }})</h1>
+
+    <form class="filter-form" method="get">
+        <div class="form-group">
+            <div class="date-range">
+                <div class="range-start">
+                    <label>From:</label>
+                    <select name="from_semester" required>
+                        <option value="Spring" {% if from_semester == 'Spring' %}selected{% endif %}>Spring</option>
+                        <option value="Summer" {% if from_semester == 'Summer' %}selected{% endif %}>Summer</option>
+                        <option value="Fall" {% if from_semester == 'Fall' %}selected{% endif %}>Fall</option>
+                    </select>
+                    <input type="number" 
+                           name="from_year" 
+                           value="{{ from_year or '' }}"
+                           min="2000"
+                           max="2099"
+                           required>
+                </div>
+    
+                <div class="range-end">
+                    <label>To:</label>
+                    <select name="to_semester" required>
+                        <option value="Spring" {% if to_semester == 'Spring' %}selected{% endif %}>Spring</option>
+                        <option value="Summer" {% if to_semester == 'Summer' %}selected{% endif %}>Summer</option>
+                        <option value="Fall" {% if to_semester == 'Fall' %}selected{% endif %}>Fall</option>
+                    </select>
+                    <input type="number" 
+                           name="to_year" 
+                           value="{{ to_year or '' }}"
+                           min="2000"
+                           max="2099"
+                           required>
+                </div>
+            </div>
+            <button type="submit" class="button">Filter</button>
+        </div>
+    </form>
+
+    {% if sections %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Course</th>
+                    <th>Section</th>
+                    <th>Semester</th>
+                    <th>Year</th>
+                    <th>Instructor</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for section in sections %}
+                <tr>
+                    <td>{{ section.course_number }} - {{ section.course_name }}</td>
+                    <td>{{ section.section_number }}</td>
+                    <td>{{ section.semester }}</td>
+                    <td>{{ section.year }}</td>
+                    <td>{{ section.instructor_name }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No sections found matching the criteria.</p>
+    {% endif %}
+</body>
+</html>

@@ -743,3 +743,67 @@ def get_all_evaluations():
     finally:
         cursor.close()
         conn.close()
+
+def get_degree_courses(degree_id):
+    """Get all courses for a degree, indicating which are core"""
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute('''
+            SELECT c.course_id, c.course_number, c.name, dc.core
+            FROM Courses c
+            JOIN DegreeCourses dc ON c.course_id = dc.course_id
+            WHERE dc.degree_id = %s
+            ORDER BY c.course_number
+        ''', (degree_id,))
+        return cursor.fetchall()
+    finally:
+        cursor.close()
+        conn.close()
+
+def get_degree(degree_id):
+    """Get degree information"""
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute('''
+            SELECT * FROM Degrees 
+            WHERE degree_id = %s
+        ''', (degree_id,))
+        return cursor.fetchone()
+    finally:
+        cursor.close()
+        conn.close()
+
+# Update models.py
+def get_degree_sections(degree_id, from_semester, from_year, to_semester, to_year):
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        query = '''
+            SELECT s.*, c.course_number, c.name as course_name,
+                   i.name as instructor_name
+            FROM Sections s
+            JOIN Courses c ON s.course_id = c.course_id
+            JOIN DegreeCourses dc ON c.course_id = dc.course_id
+            JOIN Instructors i ON s.instructor_id = i.instructor_id
+            WHERE dc.degree_id = %s
+            AND (
+                (s.year > %s) OR 
+                (s.year = %s AND FIELD(s.semester, 'Spring', 'Summer', 'Fall') >= FIELD(%s, 'Spring', 'Summer', 'Fall'))
+            )
+            AND (
+                (s.year < %s) OR 
+                (s.year = %s AND FIELD(s.semester, 'Spring', 'Summer', 'Fall') <= FIELD(%s, 'Spring', 'Summer', 'Fall'))
+            )
+            ORDER BY s.year, FIELD(s.semester, 'Spring', 'Summer', 'Fall')
+        '''
+        params = [degree_id, 
+                 from_year, from_year, from_semester,
+                 to_year, to_year, to_semester]
+        
+        cursor.execute(query, tuple(params))
+        return cursor.fetchall()
+    finally:
+        cursor.close()
+        conn.close()

@@ -1,6 +1,7 @@
+from datetime import datetime
 from flask import jsonify, render_template, request, redirect, url_for, flash
 from app import app
-from models import add_degree, add_course, add_instructor, add_or_update_evaluation, add_section, add_goal, associate_course_degree, associate_course_goal, duplicate_evaluation, get_all_evaluations, get_all_goals, get_all_sections, get_course_degrees, get_degrees, get_all_courses, get_all_instructors, get_evaluation_status, get_existing_evaluation, get_goal_completion_status, get_instructor_sections, get_section_evaluations, get_section_goals
+from models import add_degree, add_course, add_instructor, add_or_update_evaluation, add_section, add_goal, associate_course_degree, associate_course_goal, duplicate_evaluation, get_all_evaluations, get_all_goals, get_all_sections, get_course_degrees, get_degree, get_degree_courses, get_degree_sections, get_degrees, get_all_courses, get_all_instructors, get_evaluation_status, get_existing_evaluation, get_goal_completion_status, get_instructor_sections, get_section_evaluations, get_section_goals
 
 @app.route('/')
 def index():
@@ -427,3 +428,68 @@ def associate_course_degree_route():
 def get_course_degrees_route(course_id):
     existing_degrees = get_course_degrees(course_id)
     return jsonify([d['degree_id'] for d in existing_degrees])
+
+@app.route('/degree_courses/<int:degree_id>', methods=['GET'])
+def degree_courses_route(degree_id):
+    try:
+        courses = get_degree_courses(degree_id)
+        degree = get_degree(degree_id)
+        
+        if not degree:
+            flash('Degree not found', 'error')
+            return redirect(url_for('index'))
+            
+        print(f"Found {len(courses)} courses for degree {degree_id}")  # Debug log
+        return render_template('degree_courses.html', 
+                             courses=courses, 
+                             degree=degree)
+                             
+    except Exception as e:
+        print(f"Error in degree_courses_route: {str(e)}")  # Debug log
+        flash(f'Error: {str(e)}', 'error')
+        return redirect(url_for('index'))
+    
+@app.route('/select_degree/<string:query_type>')
+def select_degree_route(query_type):
+    degrees = get_degrees()
+    return render_template('select_degree.html', 
+                         degrees=degrees,
+                         query_type=query_type)
+
+# Update routes.py
+@app.route('/degree_sections/<int:degree_id>', methods=['GET'])
+def degree_sections_route(degree_id):
+    try:
+        # Get date range parameters with defaults
+        current_year = datetime.now().year
+        from_semester = request.args.get('from_semester', 'Spring')
+        from_year = int(request.args.get('from_year', current_year))
+        to_semester = request.args.get('to_semester', 'Fall')
+        to_year = int(request.args.get('to_year', current_year))
+
+        # Validate degree exists
+        degree = get_degree(degree_id)
+        if not degree:
+            flash('Degree not found', 'error')
+            return redirect(url_for('index'))
+
+        # Get sections within date range
+        sections = get_degree_sections(
+            degree_id, 
+            from_semester, from_year,
+            to_semester, to_year
+        )
+
+        # Return template with all necessary data
+        return render_template('degree_sections.html',
+                             degree=degree,
+                             sections=sections,
+                             from_semester=from_semester,
+                             from_year=from_year,
+                             to_semester=to_semester,
+                             to_year=to_year)
+
+    except Exception as e:
+        print(f"Error in degree_sections_route: {str(e)}")  # Debug log
+        flash(str(e), 'error')
+        return redirect(url_for('index'))

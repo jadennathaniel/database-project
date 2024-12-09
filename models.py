@@ -247,10 +247,15 @@ def add_goal(degree_id, code, description):
     """
     if not degree_id or not code or not description:
         raise ValueError("Degree ID, code, and description are required.")
+    
+    # Try to convert degree_id to an integer
+    try:
+        degree_id = int(degree_id)
+    except ValueError:
+        raise ValueError("Degree ID must be a valid number.")
+
     if len(code) != 4:
         raise ValueError("Goal code must be exactly 4 characters.")
-    if not isinstance(degree_id, int):
-        raise ValueError("Degree ID must be an integer.")
 
     conn = get_db_connection()
     cursor = conn.cursor()

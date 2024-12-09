@@ -722,11 +722,24 @@ def get_all_sections():
         conn.close()
 
 def get_all_evaluations():
-    # Similarly for evaluations:
+    """Get all evaluations with related course and goal information"""
     conn = get_db_connection()
-    cursor = conn.cursor()
-
-    results = cursor.session.execute("SELECT evaluation_id, evaluation_method FROM evaluations").fetchall()
-    cursor.close()
-    conn.close()
-    return [{'evaluation_id': r[0], 'evaluation_method': r[1]} for r in results]
+    cursor = conn.cursor(dictionary=True)
+    try:
+        cursor.execute('''
+            SELECT e.*, 
+                   s.section_number,
+                   c.course_number,
+                   c.name as course_name,
+                   g.code as goal_code,
+                   g.description as goal_description
+            FROM Evaluations e
+            JOIN Sections s ON e.section_id = s.section_id
+            JOIN Courses c ON s.course_id = c.course_id
+            JOIN Goals g ON e.goal_id = g.goal_id
+            ORDER BY s.year, s.semester
+        ''')
+        return cursor.fetchall()
+    finally:
+        cursor.close()
+        conn.close()

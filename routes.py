@@ -236,11 +236,33 @@ def add_evaluation_route():
             section_id = request.form.get('section_id')
             goal_id = request.form.get('goal_id')
             evaluation_method = request.form.get('evaluation_method')
-            num_a = int(request.form.get('num_a', 0))
-            num_b = int(request.form.get('num_b', 0))
-            num_c = int(request.form.get('num_c', 0))
-            num_f = int(request.form.get('num_f', 0))
+            
+            # Convert empty strings to None for grades
+            num_a = request.form.get('num_a')
+            num_a = int(num_a) if num_a != '' else None
+            
+            num_b = request.form.get('num_b')
+            num_b = int(num_b) if num_b != '' else None
+            
+            num_c = request.form.get('num_c')
+            num_c = int(num_c) if num_c != '' else None
+            
+            num_f = request.form.get('num_f')
+            num_f = int(num_f) if num_f != '' else None
+            
             improvement = request.form.get('improvement', '')
+
+            # Check if all required fields are filled
+            required_fields = [
+                evaluation_method,
+                num_a is not None,
+                num_b is not None,
+                num_c is not None,
+                num_f is not None
+            ]
+            
+            # Set completion status based on required fields
+            is_complete = 'completed' if all(required_fields) else 'partially_completed'
 
             add_or_update_evaluation(
                 section_id=section_id,
@@ -250,16 +272,15 @@ def add_evaluation_route():
                 num_b=num_b,
                 num_c=num_c,
                 num_f=num_f,
-                improvement_notes=improvement
+                improvement_notes=improvement,
+                is_complete=is_complete
             )
 
             flash('Evaluation saved successfully', 'success')
-            return redirect(url_for('add_evaluation_route', 
+            return redirect(url_for('add_evaluation_route',
                                   semester=request.args.get('semester'),
-                                  year=request.args.get('year'),
                                   instructor_id=request.args.get('instructor_id'),
                                   section_id=section_id))
-
         except Exception as e:
             print(f"Error in POST: {str(e)}")
             flash(str(e), 'error')

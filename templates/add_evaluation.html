@@ -70,7 +70,7 @@
             cursor: pointer;
             flex: 1;
         }
-        .status-indicator {
+.status-indicator {
     padding: 15px;
     border-radius: 6px;
     margin: 15px 0;
@@ -81,7 +81,12 @@
     border-left: 4px solid #38a169;
 }
 
-.not_complete {
+.partially_completed {
+    background-color: #fefcbf;
+    border-left: 4px solid #d69e2e;
+}
+
+.not_entered {
     background-color: #fed7d7;
     border-left: 4px solid #e53e3e;
 }
@@ -90,7 +95,12 @@
     font-weight: 600;
     margin-bottom: 8px;
 }
-    </style>
+
+.completion-info {
+    font-size: 0.9em;
+    color: #4a5568;
+}
+</style>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
 </head>
 <body>
@@ -166,13 +176,18 @@
         <input type="hidden" name="section_id" value="{{ section_id }}">
         <input type="hidden" name="goal_id" value="{{ goal.goal_id }}">
         
-        <div class="status-indicator {{ 'completed' if goal_statuses.get(goal.goal_id, {}).get('is_complete') else 'not_complete' }}">
+        <div class="status-indicator {{ goal_statuses.get(goal.goal_id, {}).get('status', 'not_entered') }}">
             <h3>Goal: {{ goal.code }} - {{ goal.description }}</h3>
             <p class="status-text">
-                Status: {{ 'Completed' if goal_statuses.get(goal.goal_id, {}).get('is_complete') else 'Not Complete' }}
+                Status: {{ goal_statuses.get(goal.goal_id, {}).get('status', 'not_entered')|replace('_', ' ')|title }}
             </p>
-            <p>Completed Fields: {{ goal_statuses.get(goal.goal_id, {}).get('completed_fields', 0) }} / 
-               {{ goal_statuses.get(goal.goal_id, {}).get('total_fields', 5) }}</p>
+            <p class="completion-info">
+                Completed Fields: {{ goal_statuses.get(goal.goal_id, {}).get('completed_fields', 0) }} / 
+                {{ goal_statuses.get(goal.goal_id, {}).get('total_fields', 5) }}
+                {% if goal_statuses.get(goal.goal_id, {}).get('has_improvement') %}
+                    <br>Includes improvement suggestions
+                {% endif %}
+            </p>
         </div>
 
         <div class="form-group">
@@ -195,32 +210,43 @@
                 <input type="number" 
                        id="num_a_{{ goal.goal_id }}" 
                        name="num_a" 
-                       min="0" 
-                       value="{{ existing_data.get(goal.goal_id, {}).get('grade_A', 0) }}">
+                       min="0"
+                       placeholder="Enter count"
+                       value="{{ existing_data.get(goal.goal_id, {}).get('grade_A', '') }}"
+                       onchange="this.value = this.value || null">
             </div>
+            
             <div class="form-group">
                 <label for="num_b_{{ goal.goal_id }}">Grade B:</label>
                 <input type="number" 
                        id="num_b_{{ goal.goal_id }}" 
                        name="num_b" 
-                       min="0" 
-                       value="{{ existing_data.get(goal.goal_id, {}).get('grade_B', 0) }}">
+                       min="0"
+                       placeholder="Enter count"
+                       value="{{ existing_data.get(goal.goal_id, {}).get('grade_B', '') }}"
+                       onchange="this.value = this.value || null">
             </div>
+            
             <div class="form-group">
                 <label for="num_c_{{ goal.goal_id }}">Grade C:</label>
                 <input type="number" 
                        id="num_c_{{ goal.goal_id }}" 
                        name="num_c" 
-                       min="0" 
-                       value="{{ existing_data.get(goal.goal_id, {}).get('grade_C', 0) }}">
+                       min="0"
+                       placeholder="Enter count"
+                       value="{{ existing_data.get(goal.goal_id, {}).get('grade_C', '') }}"
+                       onchange="this.value = this.value || null">
             </div>
+            
             <div class="form-group">
                 <label for="num_f_{{ goal.goal_id }}">Grade F:</label>
                 <input type="number" 
                        id="num_f_{{ goal.goal_id }}" 
                        name="num_f" 
-                       min="0" 
-                       value="{{ existing_data.get(goal.goal_id, {}).get('grade_F', 0) }}">
+                       min="0"
+                       placeholder="Enter count"
+                       value="{{ existing_data.get(goal.goal_id, {}).get('grade_F', '') }}"
+                       onchange="this.value = this.value || null">
             </div>
         </div>
 
@@ -251,7 +277,7 @@
             <button type="submit" name="save_as_draft" value="true" class="button save-draft">
                 Save as Draft
             </button>
-            <button type="submit" class="button submit">
+            <button type="submit" name="complete_evaluation" value="true" class="button submit">
                 Complete Evaluation
             </button>
         </div>
@@ -260,6 +286,37 @@
     {% endif %}
 
     <script>
+        function checkCompletion(goalId) {
+    // Get all required fields for this goal
+    const evaluationMethod = document.getElementById(`evaluation_method_${goalId}`).value;
+    const numA = document.getElementById(`num_a_${goalId}`).value;
+    const numB = document.getElementById(`num_b_${goalId}`).value;
+    const numC = document.getElementById(`num_c_${goalId}`).value;
+    const numF = document.getElementById(`num_f_${goalId}`).value;
+    
+    // Check if all required fields are filled
+    return evaluationMethod && numA && numB && numC && numF;
+}
+
+document.querySelectorAll('form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        const goalId = this.querySelector('input[name="goal_id"]').value;
+        const saveAsDraft = e.submitter.name === 'save_as_draft';
+        
+        if (!saveAsDraft && !checkCompletion(goalId)) {
+            e.preventDefault();
+            alert('Please fill in all required fields to complete the evaluation');
+        }
+        
+        // Add hidden input for completion status
+        const isComplete = checkCompletion(goalId) ? 'completed' : 'partially_completed';
+        const input = document.createElement('input');
+        input.type = 'hidden';
+        input.name = 'is_complete';
+        input.value = isComplete;
+        this.appendChild(input);
+    });
+});
     document.getElementById('section_id').addEventListener('change', function(e) {
         e.preventDefault();
         const currentUrl = new URL(window.location.href);

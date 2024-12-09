@@ -68,19 +68,21 @@ def create_tables():
             );
         """)
 
-        # Create Evaluations table
+        # Create Evaluations table with NULL defaults for grades
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS Evaluations (
                 evaluation_id INT AUTO_INCREMENT PRIMARY KEY,
                 section_id INT NOT NULL,
                 goal_id INT NOT NULL,
                 evaluation_method VARCHAR(100),
-                grade_A INT DEFAULT 0,
-                grade_B INT DEFAULT 0,
-                grade_C INT DEFAULT 0,
-                grade_F INT DEFAULT 0,
+                grade_A INT DEFAULT NULL,
+                grade_B INT DEFAULT NULL,
+                grade_C INT DEFAULT NULL,
+                grade_F INT DEFAULT NULL,
                 improvement_notes TEXT,
-                is_complete BOOLEAN NOT NULL DEFAULT FALSE,
+                is_complete ENUM('not_entered', 'partially_completed', 'completed') 
+                    DEFAULT 'not_entered',
+                UNIQUE KEY unique_section_goal (section_id, goal_id),
                 FOREIGN KEY (section_id) REFERENCES Sections(section_id),
                 FOREIGN KEY (goal_id) REFERENCES Goals(goal_id)
             );
@@ -422,51 +424,32 @@ def get_section_goals(section_id):
         conn.close()
 
 def add_or_update_evaluation(section_id, goal_id, evaluation_method, 
-                             num_a, num_b, num_c, num_f, improvement_notes=None):
+                           num_a, num_b, num_c, num_f, improvement_notes=None, is_complete=None):
     conn = get_db_connection()
-    cursor = conn.cursor()
-    
-    if not section_id or not goal_id or not evaluation_method:
-        raise ValueError("Section ID, Goal ID, and Evaluation Method are required.")
+    cursor = conn.cursor(buffered=True)
     
     try:
-        print(f"Saving evaluation: Section {section_id}, Goal {goal_id}, Method {evaluation_method}")
-        
         cursor.execute('''
-            SELECT evaluation_id FROM Evaluations
-            WHERE section_id = %s AND goal_id = %s
-        ''', (section_id, goal_id))
-        existing = cursor.fetchone()
-        
-        if existing:
-            cursor.execute('''
-                UPDATE Evaluations 
-                SET evaluation_method = %s,
-                    grade_A = %s,
-                    grade_B = %s,
-                    grade_C = %s,
-                    grade_F = %s,
-                    improvement_notes = %s,
-                    is_complete = %s
-                WHERE section_id = %s AND goal_id = %s
-            ''', (evaluation_method, num_a, num_b, num_c, num_f,
-                  improvement_notes, True, section_id, goal_id))
-        else:
-            cursor.execute('''
-                INSERT INTO Evaluations (
-                    section_id, goal_id, evaluation_method,
-                    grade_A, grade_B, grade_C, grade_F,
-                    improvement_notes, is_complete
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
-            ''', (section_id, goal_id, evaluation_method,
-                  num_a, num_b, num_c, num_f,
-                  improvement_notes, True))
-        
+            INSERT INTO Evaluations (
+                section_id, goal_id, evaluation_method,
+                grade_A, grade_B, grade_C, grade_F,
+                improvement_notes, is_complete
+            ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            ON DUPLICATE KEY UPDATE
+                evaluation_method = VALUES(evaluation_method),
+                grade_A = VALUES(grade_A),
+                grade_B = VALUES(grade_B),
+                grade_C = VALUES(grade_C),
+                grade_F = VALUES(grade_F),
+                improvement_notes = VALUES(improvement_notes),
+                is_complete = VALUES(is_complete)
+        ''', (
+            section_id, goal_id, evaluation_method,
+            num_a, num_b, num_c, num_f,
+            improvement_notes,
+            'partially_completed' if any([num_a, num_b, num_c, num_f, evaluation_method]) else 'not_entered'
+        ))
         conn.commit()
-    except Exception as e:
-        conn.rollback()
-        print(f"Error saving evaluation: {e}")
-        raise e
     finally:
         cursor.close()
         conn.close()

@@ -322,22 +322,59 @@ def associate_course_goal(course_id, goal_id):
         cursor.close()
         conn.close()
 
-def get_instructor_sections(instructor_id, semester, year):
+def get_instructor_sections(instructor_id, start_semester, start_year, end_semester, end_year):
+    """
+    Retrieve all sections taught by a given instructor within a range of semesters and years.
+    Semesters should be one of: 'Spring', 'Summer', 'Fall'.
+    """
+    # Allowed semesters and order
+    allowed_semesters = ["Spring", "Summer", "Fall"]
+    if start_semester not in allowed_semesters or end_semester not in allowed_semesters:
+        raise ValueError("Semester must be one of: Spring, Summer, Fall")
+
+    # Convert years to integers if they are strings
+    try:
+        start_year = int(start_year)
+        end_year = int(end_year)
+    except ValueError:
+        raise ValueError("Start year and end year must be integers.")
+
+    # Validate the date range
+    semester_order = {"Spring": 1, "Summer": 2, "Fall": 3}
+    if (start_year > end_year) or (start_year == end_year and semester_order[start_semester] > semester_order[end_semester]):
+        raise ValueError("Invalid range: The start semester/year must be before the end semester/year.")
+
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     try:
+        # We use FIELD() to compare semester order. The logic:
+        #   The section's year/semester must be >= start_year/start_semester
+        #   AND <= end_year/end_semester.
         cursor.execute('''
-            SELECT s.*, c.course_number, c.name as course_name
+            SELECT s.section_id, s.section_number, s.semester, s.year, s.students_enrolled,
+                   c.course_id, c.course_number, c.name AS course_name,
+                   i.instructor_id, i.name AS instructor_name
             FROM Sections s
             JOIN Courses c ON s.course_id = c.course_id
-            WHERE s.instructor_id = %s 
-            AND s.semester = %s
-            AND s.year = %s
-        ''', (instructor_id, semester, year))
-        return cursor.fetchall()
+            JOIN Instructors i ON s.instructor_id = i.instructor_id
+            WHERE s.instructor_id = %s
+              AND (
+                  (s.year > %s)
+                  OR (s.year = %s AND FIELD(s.semester, 'Spring', 'Summer', 'Fall') >= FIELD(%s, 'Spring', 'Summer', 'Fall'))
+              )
+              AND (
+                  (s.year < %s)
+                  OR (s.year = %s AND FIELD(s.semester, 'Spring', 'Summer', 'Fall') <= FIELD(%s, 'Spring', 'Summer', 'Fall'))
+              )
+            ORDER BY s.year, FIELD(s.semester, 'Spring', 'Summer', 'Fall')
+        ''', (instructor_id, start_year, start_year, start_semester, end_year, end_year, end_semester))
+
+        sections = cursor.fetchall()
+        return sections
     finally:
         cursor.close()
         conn.close()
+
 
 def get_section_evaluations(section_id):
     conn = get_db_connection()

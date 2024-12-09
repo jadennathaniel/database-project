@@ -1,6 +1,6 @@
 from flask import jsonify, render_template, request, redirect, url_for, flash
 from app import app
-from models import add_degree, add_course, add_instructor, add_or_update_evaluation, add_section, add_goal, associate_course_degree, associate_course_goal, duplicate_evaluation, get_all_goals, get_course_degrees, get_degrees, get_all_courses, get_all_instructors, get_evaluation_status, get_existing_evaluation, get_goal_completion_status, get_instructor_sections, get_section_evaluations, get_section_goals
+from models import add_degree, add_course, add_instructor, add_or_update_evaluation, add_section, add_goal, associate_course_degree, associate_course_goal, duplicate_evaluation, get_all_goals, get_all_sections, get_course_degrees, get_degrees, get_all_courses, get_all_instructors, get_evaluation_status, get_existing_evaluation, get_goal_completion_status, get_instructor_sections, get_section_evaluations, get_section_goals
 
 @app.route('/')
 def index():
@@ -326,7 +326,7 @@ def search_route():
         filtered_instructors = []
         for i in all_instructors:
             # Filter by instructor_id if provided
-            if instructor_id and i['id'] != instructor_id:
+            if instructor_id and i['instructor_id'] != instructor_id:
                 continue
             # If needed, implement semester-based filtering for instructors
             filtered_instructors.append(i)

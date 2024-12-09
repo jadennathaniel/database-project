@@ -19,11 +19,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-
-    <!-- Set the title of the page -->
     <title>CS5330 Final Project</title>
-
-    <!-- Link to the external CSS file -->
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
 </head>
 <body>
@@ -73,6 +69,22 @@
             <div class="filter-fields instructor-fields" style="display:none;">
                 <label for="instructor-id">Instructor ID:</label>
                 <input type="text" id="instructor-id" name="instructor_id" placeholder="8-char instructor ID" />
+
+                <br><br>
+                <label for="from-semester-instructor">From Semester:</label>
+                <input type="text" id="from-semester-instructor" name="from_semester_instructor" placeholder="e.g. Spring" />
+
+                <br><br>
+                <label for="from-year-instructor">From Year:</label>
+                <input type="text" id="from-year-instructor" name="from_year_instructor" placeholder="e.g. 2022" />
+
+                <br><br>
+                <label for="to-semester-instructor">To Semester:</label>
+                <input type="text" id="to-semester-instructor" name="to_semester_instructor" placeholder="e.g. Fall" />
+
+                <br><br>
+                <label for="to-year-instructor">To Year:</label>
+                <input type="text" id="to-year-instructor" name="to_year_instructor" placeholder="e.g. 2024" />
             </div>
     
             <!-- SECTION FIELDS -->

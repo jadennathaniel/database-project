@@ -3,11 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-
-    <!-- Set the title of the page -->
     <title>Search Results - CS5330 Final Project</title>
-
-    <!-- Link to the external CSS file -->
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
 </head>
 <body>
@@ -30,7 +26,7 @@
         <section>
             <h2>Search Results for "{{ filter_type | capitalize }}"</h2>
 
-            {% if results %}
+            {% if results and results|length > 0 %}
                 <table>
                     <thead>
                         {% if filter_type == 'degree' %}
@@ -78,7 +74,7 @@
                                 <th>Grade B</th>
                                 <th>Grade C</th>
                                 <th>Grade F</th>
-                                <th>Improvement Suggestion</th>
+                                <th>Improvement Notes</th>
                             </tr>
                         {% endif %}
                     </thead>
@@ -95,7 +91,7 @@
                                     <td>{{ item.name }}</td>
                                     <td>{{ 'Yes' if item.is_core else 'No' }}</td>
                                 {% elif filter_type == 'instructor' %}
-                                    <td>{{ item.id }}</td>
+                                    <td>{{ item.instructor_id }}</td>
                                     <td>{{ item.name }}</td>
                                 {% elif filter_type == 'section' %}
                                     <td>{{ item.section_id }}</td>
@@ -119,7 +115,7 @@
                                     <td>{{ item.grade_B }}</td>
                                     <td>{{ item.grade_C }}</td>
                                     <td>{{ item.grade_F }}</td>
-                                    <td>{{ item.improvement_suggestion }}</td>
+                                    <td>{{ item.improvement_notes }}</td>
                                 {% endif %}
                             </tr>
                         {% endfor %}

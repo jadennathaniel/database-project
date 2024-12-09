@@ -326,7 +326,7 @@ def search_route():
         filtered_instructors = []
         for i in all_instructors:
             # Filter by instructor_id if provided
-            if instructor_id and i['id'] != instructor_id:
+            if instructor_id and i['instructor_id'] != instructor_id:
                 continue
             # If needed, implement semester-based filtering for instructors
             filtered_instructors.append(i)

@@ -525,6 +525,15 @@ def duplicate_evaluation(from_goal_id, to_degree_id, section_id):
         if not target_goal:
             raise ValueError(f"No goal found for degree ID {to_degree_id}")
         
+        # Check if the evaluation already exists for the target goal
+        cursor.execute('''
+            SELECT 1 FROM Evaluations
+            WHERE section_id = %s AND goal_id = %s
+        ''', (section_id, target_goal['goal_id']))
+        if cursor.fetchone():
+            print(f"Evaluation for section {section_id} and goal {target_goal['goal_id']} already exists, skipping duplication.")
+            return
+        
         add_or_update_evaluation(
             section_id=section_id,
             goal_id=target_goal['goal_id'],

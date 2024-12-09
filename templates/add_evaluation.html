@@ -37,39 +37,39 @@
             border-radius: 4px;
         }
         .checkbox-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 12px;
-}
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 12px;
+        }
 
-.checkbox-wrapper {
-    display: flex;
-    align-items: center;
-    padding: 8px;
-    background: white;
-    border-radius: 6px;
-    transition: all 0.2s;
-    border: 1px solid #e2e8f0;
-}
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            background: white;
+            border-radius: 6px;
+            transition: all 0.2s;
+            border: 1px solid #e2e8f0;
+        }
 
-.checkbox-wrapper:hover {
-    background: #edf2f7;
-}
+        .checkbox-wrapper:hover {
+            background: #edf2f7;
+        }
 
-.checkbox-wrapper input[type="checkbox"] {
-    width: 18px;
-    height: 18px;
-    margin-right: 10px;
-    accent-color: #4299e1;
-    cursor: pointer;
-}
+        .checkbox-wrapper input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-right: 10px;
+            accent-color: #4299e1;
+            cursor: pointer;
+        }
 
-.checkbox-wrapper label {
-    font-size: 0.9rem;
-    color: #4a5568;
-    cursor: pointer;
-    flex: 1;
-}
+        .checkbox-wrapper label {
+            font-size: 0.9rem;
+            color: #4a5568;
+            cursor: pointer;
+            flex: 1;
+        }
     </style>
     <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
 </head>
@@ -213,7 +213,7 @@
         <div class="form-group">
             <label>Duplicate this evaluation to:</label>
             <div class="checkbox-grid">
-                {% for degree in associated_degrees %}
+                {% for degree in other_degrees %}
                 <div class="checkbox-wrapper">
                     <input type="checkbox" 
                            name="duplicate_to_degrees" 
@@ -224,27 +224,6 @@
                 {% endfor %}
             </div>
         </div>
-
-        
-
-        <!-- {% if goals|length > 1 %}
-        <div class="form-group">
-            <label>Duplicate this evaluation to:</label>
-            {% for other_goal in goals %}
-                {% if other_goal.goal_id != goal.goal_id %}
-                <div>
-                    <input type="checkbox" 
-                           name="duplicate_to" 
-                           value="{{ other_goal.goal_id }}"
-                           id="dup_{{ goal.goal_id }}_{{ other_goal.goal_id }}">
-                    <label for="dup_{{ goal.goal_id }}_{{ other_goal.goal_id }}">
-                        {{ other_goal.code }} - {{ other_goal.description }}
-                    </label>
-                </div>
-                {% endif %}
-            {% endfor %}
-        </div>
-        {% endif %} -->
 
         <div class="button-group">
             <button type="submit" name="save_as_draft" value="true" class="button save-draft">
@@ -273,22 +252,6 @@
         
         window.location.href = `${currentUrl.pathname}?${params.toString()}`;
     });
-
-        function validateForm() {
-            const grades = [
-                parseInt(document.getElementById('num_a').value) || 0,
-                parseInt(document.getElementById('num_b').value) || 0,
-                parseInt(document.getElementById('num_c').value) || 0,
-                parseInt(document.getElementById('num_f').value) || 0
-            ];
-
-            if (grades.some(g => g < 0)) {
-                alert('Grade counts must be non-negative');
-                return false;
-            }
-
-            return true;
-        }
     </script>
 </body>
 </html>

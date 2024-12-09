@@ -194,23 +194,22 @@ def add_evaluation_route():
         instructor_id = request.args.get('instructor_id')
         section_id = request.args.get('section_id')
         year = request.args.get('year')
-        
+
         sections = []
         goals = []
         goal_statuses = {}
         existing_data = {}
+        other_degrees = get_degrees()  # Fetch all degrees for duplication
 
         if semester and instructor_id:
             sections = get_instructor_sections(instructor_id, semester, year)
-            
+
         if section_id:
             goals = get_section_goals(section_id)
             for goal in goals:
-                # Get completion status for this goal
                 status = get_goal_completion_status(section_id, goal['goal_id'])
                 goal_statuses[goal['goal_id']] = status
-                
-                # Get existing evaluation data if any
+
                 eval_data = get_existing_evaluation(section_id, goal['goal_id'])
                 if eval_data:
                     existing_data[goal['goal_id']] = eval_data
@@ -224,14 +223,15 @@ def add_evaluation_route():
             semester=semester,
             instructor_id=instructor_id,
             section_id=section_id,
+            other_degrees=other_degrees  # Pass the degrees to the template
         )
+
     elif request.method == 'POST':
         try:
             section_id = request.form.get('section_id')
             goal_id = request.form.get('goal_id')
             save_as_draft = request.form.get('save_as_draft') == 'true'
-            
-            # Get form data
+
             data = {
                 'evaluation_method': request.form.get('evaluation_method'),
                 'grade_A': int(request.form.get('num_a', '0')),
@@ -240,8 +240,7 @@ def add_evaluation_route():
                 'grade_F': int(request.form.get('num_f', '0')),
                 'improvement_suggestion': request.form.get('improvement', ''),
             }
-            
-            # Add or update evaluation
+
             add_or_update_evaluation(
                 section_id=section_id,
                 goal_id=goal_id,
@@ -252,13 +251,18 @@ def add_evaluation_route():
                 num_f=data['grade_F'],
                 improvement_notes=data['improvement_suggestion'],
             )
-            
+
+            duplicate_to_degrees = request.form.getlist('duplicate_to_degrees')
+            if duplicate_to_degrees:
+                for degree_id in duplicate_to_degrees:
+                    duplicate_evaluation(goal_id, degree_id, section_id)
+
             if save_as_draft:
                 flash('Evaluation saved as draft', 'success')
             else:
                 flash('Evaluation completed successfully', 'success')
                 return redirect(url_for('index'))
-                
+
         except ValueError as e:
             flash(str(e), 'error')
             return redirect(request.url)
@@ -267,6 +271,8 @@ def add_evaluation_route():
             print(f"Error: {str(e)}")
             return redirect(request.url)
 
+    flash('Invalid request', 'error')
+    return redirect(url_for('index'))
 
         
 @app.route('/search_route', methods=['GET', 'POST'])

@@ -270,13 +270,10 @@ def add_evaluation_route():
             flash('Error saving evaluation', 'error')
             print(f"Error: {str(e)}")
             return redirect(request.url)
-<<<<<<< Updated upstream
 
     flash('Invalid request', 'error')
     return redirect(url_for('index'))
 
-=======
->>>>>>> Stashed changes
         
 from flask import request
 

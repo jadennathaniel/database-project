@@ -887,7 +887,7 @@ def get_courses_by_goals(goal_ids):
     finally:
         cursor.close()
         conn.close()
-def get_instructor_sections(instructor_id, semester, year):
+def get_instructor_sections_single(instructor_id, semester, year):
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     try:

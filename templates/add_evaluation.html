@@ -30,85 +30,35 @@
             gap: 10px;
             margin-bottom: 15px;
         }
-        .status {
-            margin: 15px 0;
-            padding: 10px;
-            background-color: #f5f5f5;
-            border-radius: 4px;
+        .error {
+            color: red;
+            margin-bottom: 10px;
         }
-        .checkbox-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-            gap: 12px;
+        .success {
+            color: green;
+            margin-bottom: 10px;
         }
-
-        .checkbox-wrapper {
-            display: flex;
-            align-items: center;
-            padding: 8px;
-            background: white;
-            border-radius: 6px;
-            transition: all 0.2s;
-            border: 1px solid #e2e8f0;
-        }
-
-        .checkbox-wrapper:hover {
-            background: #edf2f7;
-        }
-
-        .checkbox-wrapper input[type="checkbox"] {
-            width: 18px;
-            height: 18px;
-            margin-right: 10px;
-            accent-color: #4299e1;
+        input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
             cursor: pointer;
         }
-
-        .checkbox-wrapper label {
-            font-size: 0.9rem;
-            color: #4a5568;
-            cursor: pointer;
-            flex: 1;
-        }
-        .status-indicator {
-    padding: 15px;
-    border-radius: 6px;
-    margin: 15px 0;
-}
-
-.completed {
-    background-color: #c6f6d5;
-    border-left: 4px solid #38a169;
-}
-
-.not_complete {
-    background-color: #fed7d7;
-    border-left: 4px solid #e53e3e;
-}
-
-.status-text {
-    font-weight: 600;
-    margin-bottom: 8px;
-}
     </style>
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
 </head>
 <body>
-    <div class="nav">
-        <a href="{{ url_for('index') }}">← Back to Home</a>
-    </div>
-
     <h1>Add Evaluation</h1>
 
     {% with messages = get_flashed_messages(with_categories=true) %}
         {% if messages %}
             {% for category, message in messages %}
-                <div class="flash {{ category }}">{{ message }}</div>
+                <div class="{{ category }}">{{ message }}</div>
             {% endfor %}
         {% endif %}
     {% endwith %}
 
-    <form method="get" class="filter-form">
+    <!-- Filter Form -->
+    <form method="get" class="form-group">
         <div class="form-group">
             <label for="semester">Semester:</label>
             <select name="semester" id="semester" required>
@@ -123,11 +73,10 @@
             <label for="year">Year:</label>
             <input type="number" 
                    id="year" 
-                   name="year"
-                   min="2000"
-                   max="2099"
-                   value="2024"
-                   title="Please enter a valid year between 2000-2099"
+                   name="year" 
+                   value="{{ year or '' }}"
+                   min="2000" 
+                   max="2099" 
                    required>
         </div>
 
@@ -142,138 +91,101 @@
                    required>
         </div>
 
-        <button type="submit" class="button submit">Show Sections</button>
+        <input type="submit" value="Show Sections">
     </form>
 
     {% if sections %}
-    <div class="form-group">
-        <label for="section_id">Section:</label>
-        <select name="section_id" id="section_id" required>
-            <option value="">Select Section</option>
-            {% for section in sections %}
-            <option value="{{ section.section_id }}" 
-                    {% if section_id and section_id|string == section.section_id|string %}selected{% endif %}>
-                {{ section.course_number }} - Section {{ section.section_number }}
-            </option>
-            {% endfor %}
-        </select>
-    </div>
-    {% endif %}
-
-    {% if goals %}
-    {% for goal in goals %}
-    <form method="post" class="goal-section">
-        <input type="hidden" name="section_id" value="{{ section_id }}">
-        <input type="hidden" name="goal_id" value="{{ goal.goal_id }}">
-        
-        <div class="status-indicator {{ 'completed' if goal_statuses.get(goal.goal_id, {}).get('is_complete') else 'not_complete' }}">
-            <h3>Goal: {{ goal.code }} - {{ goal.description }}</h3>
-            <p class="status-text">
-                Status: {{ 'Completed' if goal_statuses.get(goal.goal_id, {}).get('is_complete') else 'Not Complete' }}
-            </p>
-            <p>Completed Fields: {{ goal_statuses.get(goal.goal_id, {}).get('completed_fields', 0) }} / 
-               {{ goal_statuses.get(goal.goal_id, {}).get('total_fields', 5) }}</p>
-        </div>
+    <!-- Evaluation Form -->
+    <form method="post" onsubmit="return validateForm()">
+        <input type="hidden" name="semester" value="{{ semester }}">
+        <input type="hidden" name="year" value="{{ year }}">
+        <input type="hidden" name="instructor_id" value="{{ instructor_id }}">
 
         <div class="form-group">
-            <label for="evaluation_method_{{ goal.goal_id }}">Evaluation Method:</label>
-            <select name="evaluation_method" id="evaluation_method_{{ goal.goal_id }}" required>
-                <option value="">Select Method</option>
-                {% set methods = ['Homework', 'Project', 'Quiz', 'Oral Presentation', 'Report', 'Mid-term', 'Final Exam', 'Other'] %}
-                {% for method in methods %}
-                    <option value="{{ method }}" 
-                            {% if existing_data.get(goal.goal_id, {}).get('evaluation_method') == method %}selected{% endif %}>
-                        {{ method }}
-                    </option>
+            <label for="section_id">Section:</label>
+            <select name="section_id" id="section_id" required>
+                <option value="">Select Section</option>
+                {% for section in sections %}
+                <option value="{{ section.section_id }}">
+                    {{ section.course_number }} - Section {{ section.section_number }}
+                </option>
                 {% endfor %}
             </select>
         </div>
 
+        <div class="form-group">
+            <label for="goal_id">Goal:</label>
+            <select name="goal_id" id="goal_id" required>
+                <option value="">Select Goal</option>
+                {% for goal in goals %}
+                <option value="{{ goal.goal_id }}">{{ goal.code }} - {{ goal.description }}</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="evaluation_method">Evaluation Method:</label>
+            <select name="evaluation_method" id="evaluation_method" required>
+                <option value="">Select Method</option>
+                <option value="Homework">Homework</option>
+                <option value="Project">Project</option>
+                <option value="Quiz">Quiz</option>
+                <option value="Oral Presentation">Oral Presentation</option>
+                <option value="Report">Report</option>
+                <option value="Mid-term">Mid-term</option>
+                <option value="Final Exam">Final Exam</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
+
+        <label>Grade Distribution:</label>
         <div class="grades-grid">
             <div class="form-group">
-                <label for="num_a_{{ goal.goal_id }}">Grade A:</label>
-                <input type="number" 
-                       id="num_a_{{ goal.goal_id }}" 
-                       name="num_a" 
-                       min="0" 
-                       value="{{ existing_data.get(goal.goal_id, {}).get('grade_A', 0) }}">
+                <label for="num_a">A:</label>
+                <input type="number" id="num_a" name="num_a" min="0" value="0" required>
             </div>
             <div class="form-group">
-                <label for="num_b_{{ goal.goal_id }}">Grade B:</label>
-                <input type="number" 
-                       id="num_b_{{ goal.goal_id }}" 
-                       name="num_b" 
-                       min="0" 
-                       value="{{ existing_data.get(goal.goal_id, {}).get('grade_B', 0) }}">
+                <label for="num_b">B:</label>
+                <input type="number" id="num_b" name="num_b" min="0" value="0" required>
             </div>
             <div class="form-group">
-                <label for="num_c_{{ goal.goal_id }}">Grade C:</label>
-                <input type="number" 
-                       id="num_c_{{ goal.goal_id }}" 
-                       name="num_c" 
-                       min="0" 
-                       value="{{ existing_data.get(goal.goal_id, {}).get('grade_C', 0) }}">
+                <label for="num_c">C:</label>
+                <input type="number" id="num_c" name="num_c" min="0" value="0" required>
             </div>
             <div class="form-group">
-                <label for="num_f_{{ goal.goal_id }}">Grade F:</label>
-                <input type="number" 
-                       id="num_f_{{ goal.goal_id }}" 
-                       name="num_f" 
-                       min="0" 
-                       value="{{ existing_data.get(goal.goal_id, {}).get('grade_F', 0) }}">
+                <label for="num_f">F:</label>
+                <input type="number" id="num_f" name="num_f" min="0" value="0" required>
             </div>
         </div>
 
         <div class="form-group">
-            <label for="improvement_{{ goal.goal_id }}">Suggested Improvements:</label>
-            <textarea id="improvement_{{ goal.goal_id }}" 
+            <label for="improvement">Suggested Improvements:</label>
+            <textarea id="improvement" 
                       name="improvement" 
                       rows="4" 
-                      placeholder="Optional: Enter suggestions for improvement">{{ existing_data.get(goal.goal_id, {}).get('improvement_notes', '') }}</textarea>
+                      placeholder="Optional: Enter suggestions for improvement"></textarea>
         </div>
 
-        <div class="form-group">
-            <label>Duplicate this evaluation to:</label>
-            <div class="checkbox-grid">
-                {% for degree in other_degrees %}
-                <div class="checkbox-wrapper">
-                    <input type="checkbox" 
-                           name="duplicate_to_degrees" 
-                           value="{{ degree.degree_id }}"
-                           id="dup_{{ degree.degree_id }}">
-                    <label for="dup_{{ degree.degree_id }}">{{ degree.name }} ({{ degree.level }})</label>
-                </div>
-                {% endfor %}
-            </div>
-        </div>
-
-        <div class="button-group">
-            <button type="submit" name="save_as_draft" value="true" class="button save-draft">
-                Save as Draft
-            </button>
-            <button type="submit" class="button submit">
-                Complete Evaluation
-            </button>
-        </div>
+        <input type="submit" value="Submit Evaluation">
     </form>
-    {% endfor %}
     {% endif %}
 
     <script>
-    document.getElementById('section_id').addEventListener('change', function(e) {
-        e.preventDefault();
-        const currentUrl = new URL(window.location.href);
-        const params = currentUrl.searchParams;
-        
-        const semester = document.querySelector('select[name="semester"]').value;
-        const instructorId = document.querySelector('input[name="instructor_id"]').value;
-        
-        params.set('section_id', this.value);
-        params.set('semester', semester);
-        params.set('instructor_id', instructorId);
-        
-        window.location.href = `${currentUrl.pathname}?${params.toString()}`;
-    });
+        function validateForm() {
+            const grades = [
+                parseInt(document.getElementById('num_a').value) || 0,
+                parseInt(document.getElementById('num_b').value) || 0,
+                parseInt(document.getElementById('num_c').value) || 0,
+                parseInt(document.getElementById('num_f').value) || 0
+            ];
+
+            if (grades.some(g => g < 0)) {
+                alert('Grade counts must be non-negative');
+                return false;
+            }
+
+            return true;
+        }
     </script>
 </body>
 </html>

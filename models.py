@@ -242,22 +242,41 @@ def add_section(course_id, section_number, semester, instructor_id, students_enr
 
 
 def add_goal(degree_id, code, description):
-    if not code or len(code) != 4:
-        raise ValueError("Goal code must be exactly 4 characters")
-    if not description:
-        raise ValueError("Description is required")
+    """
+    Adds a new goal to the Goals table.
+    """
+    if not degree_id or not code or not description:
+        raise ValueError("Degree ID, code, and description are required.")
+    if len(code) != 4:
+        raise ValueError("Goal code must be exactly 4 characters.")
+    if not isinstance(degree_id, int):
+        raise ValueError("Degree ID must be an integer.")
+
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute('INSERT INTO Goals (degree_id, code, description) VALUES (%s, %s, %s)', 
-                       (degree_id, code, description))
+        # Validate degree_id exists in Degrees table
+        cursor.execute('SELECT degree_id FROM Degrees WHERE degree_id = %s', (degree_id,))
+        degree_exists = cursor.fetchone()
+        if not degree_exists:
+            raise ValueError(f"Degree ID {degree_id} does not exist in the database.")
+
+        # Insert the new goal
+        cursor.execute(
+            'INSERT INTO Goals (degree_id, code, description) VALUES (%s, %s, %s)',
+            (degree_id, code, description)
+        )
         conn.commit()
+        print(f"Goal added successfully with code: {code}, description: {description}, degree_id: {degree_id}")
+
     except Error as e:
-        print(f"Error adding goal: {e}")
         conn.rollback()
+        print(f"Error adding goal: {e}")
+        raise e
     finally:
         cursor.close()
         conn.close()
+
 
 def get_all_goals():    
     conn = get_db_connection()
@@ -524,15 +543,6 @@ def duplicate_evaluation(from_goal_id, to_degree_id, section_id):
         target_goal = cursor.fetchone()
         if not target_goal:
             raise ValueError(f"No goal found for degree ID {to_degree_id}")
-        
-        # Check if the evaluation already exists for the target goal
-        cursor.execute('''
-            SELECT 1 FROM Evaluations
-            WHERE section_id = %s AND goal_id = %s
-        ''', (section_id, target_goal['goal_id']))
-        if cursor.fetchone():
-            print(f"Evaluation for section {section_id} and goal {target_goal['goal_id']} already exists, skipping duplication.")
-            return
         
         add_or_update_evaluation(
             section_id=section_id,

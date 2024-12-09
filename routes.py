@@ -601,15 +601,72 @@ def goal_courses_route(degree_id):
 def evaluation_status_route():
     semester = request.args.get('semester')
     year = request.args.get('year')
-    
-    if semester and year:
+    percentage = request.args.get('percentage', '').strip()
+
+    # Convert percentage to a float or int if provided
+    if percentage:
         try:
-            sections = get_sections_evaluation_status(semester, year)
+            percentage = float(percentage)
+        except ValueError:
+            percentage = None
+
+    if semester and year and percentage is not None:
+        try:
+            # Get all sections for the given semester/year
+            all_sections = get_sections_evaluation_status(semester, year)
+            
+            # We need to sum up grades for each section.
+            # get_sections_evaluation_status currently returns combined data,
+            # but we don't have a direct sum of A, B, C, F from it.
+            # We'll fetch evaluations for each section and sum them up.
+
+            # We know `get_section_evaluations(section_id)` returns a list of evaluations.
+            filtered_sections = []
+            for sec in all_sections:
+                # sec contains section_id, etc.
+                evaluations = get_section_evaluations(sec['section_id'])
+
+                total_A = 0
+                total_B = 0
+                total_C = 0
+                total_F = 0
+
+                for ev in evaluations:
+                    total_A += ev['grade_A'] if ev['grade_A'] else 0
+                    total_B += ev['grade_B'] if ev['grade_B'] else 0
+                    total_C += ev['grade_C'] if ev['grade_C'] else 0
+                    total_F += ev['grade_F'] if ev['grade_F'] else 0
+
+                total_goals = len(evaluations)
+                evaluated_goals = sum(1 for ev in evaluations if ev['is_complete'] == 'completed')
+                improvement_count = sum(1 for ev in evaluations if ev['improvement_notes'] and ev['improvement_notes'].strip() != '')
+
+                # Calculate non-F percentage:
+                # If no evaluations (total A+B+C+F == 0), we skip this section or treat it as 0%
+                sum_grades = total_A + total_B + total_C + total_F
+                if sum_grades > 0:
+                    non_f = total_A + total_B + total_C
+                    non_f_pct = (non_f / sum_grades) * 100.0
+                else:
+                    non_f_pct = 0.0
+
+                # Check if non_f_pct meets the threshold
+                if non_f_pct >= percentage:
+                    # Update the section dict with additional info
+                    sec['evaluated_goals'] = evaluated_goals
+                    sec['total_goals'] = total_goals
+                    sec['has_improvement'] = improvement_count
+                    sec['non_f_percentage'] = round(non_f_pct, 2)
+                    filtered_sections.append(sec)
+
             return render_template('evaluation_status.html',
-                                sections=sections,
-                                semester=semester,
-                                year=year)
+                                   filtered_sections=filtered_sections,
+                                   semester=semester,
+                                   year=year,
+                                   percentage=percentage)
         except Exception as e:
             flash(str(e), 'error')
-            
-    return render_template('evaluation_status.html')
+            return render_template('evaluation_status.html', semester=semester, year=year, percentage=percentage)
+    else:
+        # If not all parameters are provided or percentage is invalid, just show the form
+        return render_template('evaluation_status.html', semester=semester, year=year, percentage=percentage)

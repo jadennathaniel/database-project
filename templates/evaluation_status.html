@@ -11,24 +11,20 @@
             border-radius: 8px;
             border-left: 4px solid;
         }
-        .not_entered {
-            border-color: #e53e3e;
-            background-color: #fff5f5;
+        .not_entered { border-color: #e53e3e; }
+        .partially_completed { border-color: #d69e2e; }
+        .completed { border-color: #38a169; }
+        .grade-distribution {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin: 10px 0;
         }
-        .partially_entered {
-            border-color: #d69e2e;
-            background-color: #fffff0;
-        }
-        .completed {
-            border-color: #38a169;
-            background-color: #f0fff4;
-        }
-        .status-badge {
-            display: inline-block;
-            padding: 4px 8px;
+        .grade-count {
+            text-align: center;
+            padding: 8px;
+            background: #f7fafc;
             border-radius: 4px;
-            font-size: 0.875rem;
-            font-weight: 500;
         }
     </style>
 </head>
@@ -43,37 +39,57 @@
             <option value="Fall" {% if semester == 'Fall' %}selected{% endif %}>Fall</option>
         </select>
         
-        <input type="number" name="year" value="{{ year or '' }}" placeholder="Year" required>
-
-        <!-- New field for the percentage input -->
-        <input type="number" name="percentage" value="{{ percentage or '' }}" placeholder="Percentage" min="0" max="100">
+        <input type="number" 
+               name="year" 
+               value="{{ year or '' }}"
+               placeholder="Year"
+               required>
                
-        <button type="submit">Filter Sections</button>
+        <input type="number" 
+               name="percentage" 
+               value="{{ percentage or '' }}"
+               placeholder="Min Pass Rate %"
+               min="0"
+               max="100"
+               step="0.1">
+               
+        <button type="submit">Filter</button>
     </form>
 
-    {% if filtered_sections is defined and filtered_sections %}
-        <h2>Sections Meeting the Criteria (Non-F ≥ {{ percentage }}%)</h2>
-        {% for section in filtered_sections %}
+    {% if sections %}
+        {% for section in sections %}
             <div class="status-card {{ section.status }}">
                 <h3>{{ section.course_number }} - Section {{ section.section_number }}</h3>
                 <p>{{ section.course_name }}</p>
                 <p>Instructor: {{ section.instructor_name }}</p>
-                <p>Status: 
-                    <span class="status-badge">
-                        {{ section.status|replace('_', ' ')|title }}
-                    </span>
-                </p>
-                <p>Goals Evaluated: {{ section.evaluated_goals }}/{{ section.total_goals }}</p>
-                {% if section.has_improvement > 0 %}
-                    <p>Has improvement suggestions for {{ section.has_improvement }} goals</p>
+                
+                <div class="goal-info">
+                    <h4>Goal: {{ section.goal_code }}</h4>
+                    <p>{{ section.goal_description }}</p>
+                </div>
+                
+                <p>Status: {{ section.status|replace('_', ' ')|title }}</p>
+                
+                {% if section.grade_A is not none %}
+                    <div class="grade-distribution">
+                        <div class="grade-count">A: {{ section.grade_A }}</div>
+                        <div class="grade-count">B: {{ section.grade_B }}</div>
+                        <div class="grade-count">C: {{ section.grade_C }}</div>
+                        <div class="grade-count">F: {{ section.grade_F }}</div>
+                    </div>
+                    <p>Pass Rate: {{ section.pass_rate }}%</p>
                 {% endif %}
-                <!-- Show the calculated percentage -->
-                <p>Non-F Percentage: {{ section.non_f_percentage }}%</p>
+                
+                {% if section.has_improvement %}
+                    <p>✓ Has improvement suggestions</p>
+                {% endif %}
             </div>
         {% endfor %}
     {% else %}
-        {% if semester and year and percentage %}
-            <p>No sections found that meet the criteria for {{ semester }} {{ year }} at {{ percentage }}%.</p>
+        {% if semester and year %}
+            <p>No sections found for {{ semester }} {{ year }}
+               {% if percentage %} with pass rate ≥ {{ percentage }}%{% endif %}
+            </p>
         {% endif %}
     {% endif %}
 </body>

@@ -51,10 +51,10 @@ def create_tables():
                 year INT NOT NULL DEFAULT 2024,
                 instructor_id CHAR(8),
                 students_enrolled INT NOT NULL,
+                UNIQUE KEY unique_section (course_id, section_number),
                 FOREIGN KEY (course_id) REFERENCES Courses(course_id),
                 FOREIGN KEY (instructor_id) REFERENCES Instructors(instructor_id)
-);
-
+            );
         """)
 
         # Create Goals table
@@ -224,20 +224,33 @@ def get_all_instructors():
 
 
 def add_section(course_id, section_number, semester, instructor_id, students_enrolled, year):
+    """Add a new section with uniqueness check"""
     if not section_number.isdigit() or len(section_number) != 3:
         raise ValueError("Section number must be 3 digits")
+        
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
+        # Check if section already exists for this course
+        cursor.execute('''
+            SELECT 1 FROM Sections 
+            WHERE course_id = %s AND section_number = %s
+        ''', (course_id, section_number))
+        
+        if cursor.fetchone():
+            raise ValueError(f"Section {section_number} already exists for this course")
+            
         cursor.execute('''
             INSERT INTO Sections 
             (course_id, section_number, semester, instructor_id, students_enrolled, year)
             VALUES (%s, %s, %s, %s, %s, %s)
         ''', (course_id, section_number, semester, instructor_id, students_enrolled, year))
         conn.commit()
+        
     except Error as e:
-        print(f"Error adding section: {e}")
         conn.rollback()
+        print(f"Error adding section: {e}")
+        raise
     finally:
         cursor.close()
         conn.close()
@@ -911,7 +924,7 @@ def get_instructor_sections_single(instructor_id, semester, year):
 
 # models.py
 def get_sections_evaluation_status(semester, year):
-    """Get evaluation status for all sections in a semester"""
+    """Get evaluation status for all sections in a semester, including goals"""
     conn = get_db_connection()
     cursor = conn.cursor(dictionary=True)
     try:
@@ -922,6 +935,9 @@ def get_sections_evaluation_status(semester, year):
                 c.course_number,
                 c.name as course_name,
                 i.name as instructor_name,
+                g.goal_id,
+                g.code as goal_code,
+                g.description as goal_description,
                 e.is_complete,
                 CASE
                     WHEN e.is_complete IS NULL THEN 'not_entered'
@@ -937,9 +953,11 @@ def get_sections_evaluation_status(semester, year):
             FROM Sections s
             JOIN Courses c ON s.course_id = c.course_id
             JOIN Instructors i ON s.instructor_id = i.instructor_id
-            LEFT JOIN Evaluations e ON s.section_id = e.section_id
+            JOIN CourseGoals cg ON c.course_id = cg.course_id
+            JOIN Goals g ON cg.goal_id = g.goal_id
+            LEFT JOIN Evaluations e ON s.section_id = e.section_id AND g.goal_id = e.goal_id
             WHERE s.semester = %s AND s.year = %s
-            ORDER BY c.course_number, s.section_number
+            ORDER BY c.course_number, s.section_number, g.code
         ''', (semester, year))
         return cursor.fetchall()
     finally:

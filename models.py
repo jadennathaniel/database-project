@@ -320,22 +320,35 @@ def associate_course_goal(course_id, goal_id):
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
+        # Verify course exists
         cursor.execute('SELECT course_id FROM Courses WHERE course_id = %s', (course_id,))
         if cursor.fetchone() is None:
             raise ValueError(f"Course ID {course_id} does not exist")
         
-        cursor.execute('SELECT goal_id FROM Goals WHERE goal_id = %s', (goal_id,))
-        if cursor.fetchone() is None:
+        # Verify goal exists
+        cursor.execute('SELECT goal_id, degree_id FROM Goals WHERE goal_id = %s', (goal_id,))
+        goal = cursor.fetchone()
+        if goal is None:
             raise ValueError(f"Goal ID {goal_id} does not exist")
+        goal_degree_id = goal['degree_id']
         
+        # Verify the course is associated with the same degree as the goal
+        cursor.execute('''
+            SELECT degree_id FROM DegreeCourses WHERE course_id = %s AND degree_id = %s
+        ''', (course_id, goal_degree_id))
+        if cursor.fetchone() is None:
+            raise ValueError(f"Course ID {course_id} is not associated with the degree of Goal ID {goal_id}")
+
+        # Associate course with goal
         cursor.execute('INSERT INTO CourseGoals (course_id, goal_id) VALUES (%s, %s)', (course_id, goal_id))
         conn.commit()
     except Error as e:
-        print(f"Error associating course with goal: {e}")
         conn.rollback()
+        raise ValueError(f"Error associating course with goal: {e}")
     finally:
         cursor.close()
         conn.close()
+
 
 def get_instructor_sections(instructor_id, start_semester, start_year, end_semester, end_year):
     """
@@ -963,3 +976,39 @@ def get_sections_evaluation_status(semester, year):
     finally:
         cursor.close()
         conn.close()
+
+def get_goals_for_course(course_id):
+    """
+    Fetches goals associated with the degrees linked to a specific course.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor(dictionary=True)
+    try:
+        # Fetch degrees associated with the course
+        cursor.execute('SELECT degree_id FROM DegreeCourses WHERE course_id = %s', (course_id,))
+        degrees = cursor.fetchall()
+        degree_ids = [degree['degree_id'] for degree in degrees]
+
+        if not degree_ids:
+            print(f"No degrees associated with course_id {course_id}")
+            return []
+
+        # Fetch goals for those degrees
+        placeholders = ','.join(['%s'] * len(degree_ids))
+        query = f'''
+            SELECT g.goal_id, g.code, g.description, d.name as degree_name, d.level as degree_level
+            FROM Goals g
+            JOIN Degrees d ON g.degree_id = d.degree_id
+            WHERE g.degree_id IN ({placeholders})
+        '''
+        cursor.execute(query, degree_ids)
+        goals = cursor.fetchall()
+        return goals
+
+    except Exception as e:
+        print(f"Error fetching goals for course {course_id}: {e}")
+        raise e  # Raise the error for the route to handle
+    finally:
+        cursor.close()
+        conn.close()
+
